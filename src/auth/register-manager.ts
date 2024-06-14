@@ -31,6 +31,7 @@ class RegistrationManager {
         return registerMethod(req, res, next);
       } catch (error) {
         res.status(StatusCodes.METHOD_NOT_ALLOWED).json({
+          success: false,
           msg: `Register method ${methodName} is not supported`,
         });
       }

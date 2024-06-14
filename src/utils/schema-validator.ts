@@ -21,6 +21,7 @@ const validateRegister = (body: any) => {
       .join(", ");
     return {
       status: StatusCodes.BAD_REQUEST,
+      success: false,
       msg: `Validation errors: ${errorMessages}`,
     };
   }
@@ -30,12 +31,17 @@ const validateRegister = (body: any) => {
   if (!isValidUtf8(username) || !isValidUtf8(password)) {
     return {
       status: StatusCodes.BAD_REQUEST,
+      success: false,
       msg: "Invalid UTF-8 characters in username or password",
     };
   }
 
   console.log("validateRegister finished");
-  return { status: StatusCodes.OK, msg: "Validation successful" };
+  return {
+    status: StatusCodes.OK,
+    success: true,
+    msg: "Validation successful",
+  };
 };
 
 export default validateRegister;
