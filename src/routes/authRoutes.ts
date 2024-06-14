@@ -4,6 +4,7 @@ import RegisterMethodFactory from "../auth/register-method-factory";
 import regenerateSession from "../middleware/regenerateSession";
 import authGuard from "../middleware/auth-guard";
 import { Request, Response } from "express";
+import validateEmail from "../controllers/validate-email";
 
 import express from "express";
 const router = express.Router();
@@ -11,7 +12,7 @@ const router = express.Router();
 router
   .route("/register/:method")
   .post(RegisterMethodFactory, authGuard, (req: Request, res: Response) => {
-    res.status(200).json({ msg: "Register successful" });
+    res.status(200).json({ success: true, msg: "Register successful" });
   });
 router
   .route("/login/:method")
@@ -20,11 +21,11 @@ router
     regenerateSession,
     authGuard,
     (req: Request, res: Response) => {
-      res.status(200).json({ msg: "Login successful" });
+      res.status(200).json({ success: true, msg: "Login successful" });
     },
   );
 router.route("/logout").delete(authGuard, logout);
 
-router.route("/auth/verify").get();
+router.route("/auth/verify").get(validateEmail);
 
 export default router;

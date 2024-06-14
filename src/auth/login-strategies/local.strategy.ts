@@ -24,6 +24,7 @@ const verifyCallback: VerifyFunction = async (username, password, done) => {
         message: "Invalid email or username and password.",
       });
     }
+
     // Verify password
     const isPasswordValid = await bcryptjs.compare(password, user.password);
 

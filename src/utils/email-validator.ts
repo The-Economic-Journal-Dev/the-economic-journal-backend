@@ -61,7 +61,7 @@ const sendEmailToValidate = async (email: string) => {
       subject: "Email Verification", // Subject line
       text: "Please verify your email by clicking the following link:", // Plain text body
       html: `<b>Please verify your email by clicking the following link:</b> 
-      <a href="${process.env.BASE_URL}/auth/verify?email=${encodeURIComponent(email)}&token=${encodeURIComponent(verificationToken)}">Verify Email Using Code: ${verificationCode}</a>`, // HTML body
+      <a href="${process.env.BASE_URL}/auth/verify?token=${encodeURIComponent(verificationToken)}">Verify Email Using Code: ${verificationCode}</a>`, // HTML body
     });
 
     console.log("Message sent: %s", info.messageId);

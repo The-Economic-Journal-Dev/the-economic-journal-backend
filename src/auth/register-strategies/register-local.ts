@@ -34,7 +34,7 @@ const localRegisterMethod = async (
   if (schemaValidationResult.status !== StatusCodes.OK) {
     return res
       .status(schemaValidationResult.status)
-      .json({ msg: schemaValidationResult.msg });
+      .json({ success: false, msg: schemaValidationResult.msg });
   }
 
   try {
@@ -47,7 +47,7 @@ const localRegisterMethod = async (
       // If the user already exists, send a 400 Bad Request response
       return res
         .status(StatusCodes.BAD_REQUEST)
-        .json({ msg: "Email or username already exists" });
+        .json({ success: false, msg: "Email or username already exists" });
     }
 
     // Create a new user if email and username are unique
@@ -58,7 +58,7 @@ const localRegisterMethod = async (
     if (!emailValidationResult.success) {
       return res
         .status(emailValidationResult.status as number)
-        .json({ msg: emailValidationResult.msg });
+        .json({ success: false, msg: emailValidationResult.msg });
     }
 
     const session = await UserModel.startSession();
