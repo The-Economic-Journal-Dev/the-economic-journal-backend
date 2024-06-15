@@ -5,6 +5,7 @@ import {
   generateVerificationCode,
   generateRandomToken,
 } from "./token-generator";
+import dnsCache from "./cache-utils";
 
 const sendEmailToValidate = async (email: string) => {
   // Split the email address into its parts
@@ -28,6 +29,17 @@ const sendEmailToValidate = async (email: string) => {
       success: false,
       status: StatusCodes.BAD_REQUEST,
       msg: "Email domain must contain at least one '.'",
+    };
+  }
+
+  // Check the cache first
+  const cachedRecords = dnsCache.get(domain);
+  if (cachedRecords) {
+    return {
+      success: true,
+      status: StatusCodes.OK,
+      msg: "Cached MX records found",
+      records: cachedRecords,
     };
   }
 

@@ -6,10 +6,12 @@ const logout = (req: Request, res: Response) => {
   if (req.session) {
     req.session.destroy((err) => {
       if (err) {
-        res.status(StatusCodes.BAD_REQUEST).send("Unable to log out");
-      } else {
-        res.send("Logout successful");
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ success: true, msg: "Logout unsuccessful" });
       }
+      res.clearCookie("connect.sid");
+      res.json({ success: true, msg: "Logout successful" });
     });
   } else {
     res.end();
