@@ -34,31 +34,24 @@ const sendEmailToValidate = async (email: string) => {
 
   // Check the cache first
   const cachedRecords = dnsCache.get(domain);
-  if (cachedRecords) {
-    return {
-      success: true,
-      status: StatusCodes.OK,
-      msg: "Cached MX records found",
-      records: cachedRecords,
-    };
-  }
-
-  // Perform DNS MX record lookup
-  try {
-    const records = await dns.promises.resolveMx(domain);
-    if (records.length === 0) {
+  if (!cachedRecords) {
+    // Perform DNS MX record lookup if it doesn't exist in cache
+    try {
+      const records = await dns.promises.resolveMx(domain);
+      if (records.length === 0) {
+        return {
+          success: false,
+          status: StatusCodes.BAD_REQUEST,
+          msg: "Email domain has no MX records",
+        };
+      }
+    } catch (error) {
       return {
         success: false,
         status: StatusCodes.BAD_REQUEST,
-        msg: "Email domain has no MX records",
+        msg: `DNS lookup failed: ${(error as Error).message}`,
       };
     }
-  } catch (error) {
-    return {
-      success: false,
-      status: StatusCodes.BAD_REQUEST,
-      msg: `DNS lookup failed: ${(error as Error).message}`,
-    };
   }
 
   // Generate a random verification token
