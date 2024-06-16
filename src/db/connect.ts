@@ -1,7 +1,6 @@
 import mongoose, { Mongoose } from "mongoose";
 import type { MongoClient } from "mongodb";
 import MongoStore from "connect-mongo";
-import { error } from "console";
 
 // Function to connect to MongoDB
 const connectToDB = async (url: string) => {

@@ -19,5 +19,8 @@ router.route("/").get((req: Request, res: Response) => {
 router.route("/dashboard").get(authGuard, (req: Request, res: Response) => {
   res.sendFile(path.join(process.env.BASE_DIR!, "public", "dashboard.html"));
 });
+router.route("/verify").get((req: Request, res: Response) => {
+  res.sendFile(path.join(process.env.BASE_DIR!, "public", "verify-email.html"));
+});
 
 export default router;
