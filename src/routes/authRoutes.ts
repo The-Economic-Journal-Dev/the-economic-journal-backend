@@ -26,6 +26,6 @@ router
   );
 router.route("/logout").delete(authGuard, logout);
 
-router.route("/auth/verify").get(validateEmail);
+router.route("/verify").post(validateEmail);
 
 export default router;

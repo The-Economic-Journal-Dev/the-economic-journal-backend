@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 
 const authGuard = (req: Request, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated()) {
+  if (req.session.user) {
+    console.log(req.session.user + "'s session has started");
     // User is authenticated, proceed to the next middleware/route handler
     return next();
   } else {

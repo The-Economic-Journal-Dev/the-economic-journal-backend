@@ -31,10 +31,6 @@ app.use(
   }),
 );
 
-// Middlewares to parse requests
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 // Middleware to use CORS
 app.use(cors());
 
@@ -61,6 +57,10 @@ app.use(
     },
   }),
 );
+
+// Middlewares to parse requests
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Passport initialization
 app.use(passport.initialize());
