@@ -3,15 +3,15 @@ import "dotenv/config"; // Import and configure dotenv to load environment varia
 import path from "path";
 import viewsCounter from "../controllers/views-counter";
 import authGuard from "../middleware/auth-guard";
-import uploadFileToS3 from "../controllers/upload-file-to-s3";
 import upload from "../config/multer-config";
+import createNewPost from "../controllers/create-new-post";
 
 const router = express.Router();
 
 router.route("/api/views").get(viewsCounter);
 router
   .route("/api/blog/upload")
-  .post(authGuard, upload.array("photos", 12), uploadFileToS3);
+  .post(authGuard, upload.single("image"), createNewPost);
 
 router.route("/").get((req: Request, res: Response) => {
   res.sendFile(path.join(process.env.BASE_DIR!, "public", "index.html"));

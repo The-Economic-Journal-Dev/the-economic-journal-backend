@@ -11,7 +11,7 @@ import { UserModel, IUser } from "../models/UserModel";
  * @param {Request} req - Express request object.
  * @param {Response} res - Express response object.
  */
-const validateEmail = async (req: Request, res: Response) => {
+const activateUser = async (req: Request, res: Response) => {
   console.log("Email validation called");
   const { token } = req.query;
   const { code } = req.body;
@@ -23,7 +23,7 @@ const validateEmail = async (req: Request, res: Response) => {
   if (!emailVerificationToken) {
     return res.status(StatusCodes.NOT_FOUND).json({
       success: false,
-      msg: "Invalid token",
+      msg: "Invalid token or token doesn't exist",
     });
   }
 
@@ -50,4 +50,4 @@ const validateEmail = async (req: Request, res: Response) => {
   });
 };
 
-export default validateEmail;
+export default activateUser;
