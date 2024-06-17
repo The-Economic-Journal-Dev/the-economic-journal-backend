@@ -6,7 +6,7 @@ const checkSession = (req: Request, res: Response) => {
     res.json({
       success: true,
       msg: "Session is active",
-      userId: req.session.user,
+      user: req.session.user,
     });
   } else {
     res

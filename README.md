@@ -1,76 +1,121 @@
+# API Documentation for Frontend Developers
 
+## Table of Contents
+
+1. [Authentication Endpoints](#Authentication)
+   1. [Register](#register-endpoint)
+   2. [Login](#login-endpoint)
+   3. [Check Session](#check-session-endpoint)
+   4. [Logout](#logout-endpoint)
+
+# Authentication
+
+## Register Endpoint
+
+### URL
+
+`/register/:method`
+
+### Method
+
+`POST`
+
+### Parameters
+
+- `method` (string): The registration method (e.g., `local`).
+- Currently, the only method available is `local`
+
+### Request Body
+
+```json
+{
+  "email": "user@example.com",
+  "username": "username",
+  "password": "password",
+  "confirmPassword": "password"
+}
 ```
-auth-project
-├─ .gitignore
-├─ .prettierignore
-├─ .prettierrc
-├─ .vscode
-│  └─ settings.json
-├─ dist
-│  ├─ app.js
-│  ├─ auth
-│  │  ├─ login-method-factory.js
-│  │  ├─ login-strategies
-│  │  │  └─ local.strategy.js
-│  │  ├─ register-manager.js
-│  │  ├─ register-method-factory.js
-│  │  └─ register-strategies
-│  │     └─ register-local.js
-│  ├─ config
-│  │  ├─ multer-config.js
-│  │  ├─ passport-config.js
-│  │  ├─ register-config.js
-│  │  ├─ session-config.js
-│  │  └─ strategies
-│  │     └─ local.strategy.js
-│  ├─ controllers
-│  │  ├─ logout.js
-│  │  ├─ upload-file-to-s3.js
-│  │  ├─ upload-file.js
-│  │  ├─ validate-email.js
-│  │  └─ views-counter.js
-│  ├─ db
-│  │  └─ connect.js
-│  ├─ middleware
-│  │  ├─ auth-guard.js
-│  │  ├─ auth-jwt.js
-│  │  ├─ file-parser.js
-│  │  ├─ login-method-factory.js
-│  │  ├─ login.js
-│  │  ├─ regenerateSession.js
-│  │  ├─ regenerateSessionAfterLogin.js
-│  │  ├─ register.js
-│  │  └─ schema-validator.js
-│  ├─ models
-│  │  ├─ EmailVerifictionTokenModel.js
-│  │  ├─ User.js
-│  │  └─ UserModel.js
-│  ├─ routes
-│  │  ├─ authRoutes.js
-│  │  └─ mainRoutes.js
-│  ├─ schema
-│  │  └─ UserSchema.js
-│  ├─ services
-│  │  └─ aws
-│  │     ├─ clients
-│  │     │  └─ s3.js
-│  │     └─ s3-file-upload.js
-│  └─ utils
-│     ├─ email-validator.js
-│     ├─ mailer.js
-│     ├─ schema-validator.js
-│     └─ token-generator.js
-├─ eslint.config.js
-├─ package copy.json
-├─ package-lock copy.json
-├─ package-lock.json
-├─ package.json
-├─ public
-│  ├─ browser-app.js
-│  ├─ dashboard.html
-│  └─ index.html
-├─ README.md
-├─ tsconfig.json
-└─ types.d.ts
 
+### Response
+
+```json
+{
+  "success": true,
+  "msg": "Register successful"
+}
+```
+
+## Login Endpoint
+
+### URL
+
+`/login/:method`
+
+### Method
+
+`GET`
+
+### Parameters
+
+- `method` (string): The registration method (e.g., `local`).
+- Currently, the only method available is `local`
+
+### Request Body
+
+```json
+{
+  "username": "username",
+  "password": "password"
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "msg": "Login successful"
+}
+```
+
+## Check Session Endpoint
+
+### URL
+
+`/check-session`
+
+### Method
+
+`GET`
+
+### Response
+
+```json
+{
+  "authenticated": true,
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "username": "username"
+  }
+}
+```
+
+## Logout Endpoint
+
+### URL
+
+`/logout`
+
+### Method
+
+`DELETE`
+
+### Response
+
+```json
+{
+  "success": true,
+  "msg": "Logout successful"
+}
 ```
