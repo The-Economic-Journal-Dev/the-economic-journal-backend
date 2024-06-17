@@ -53,6 +53,7 @@ const localRegisterMethod = async (
     // Create a new user if email and username are unique
     const newUser: IUser = new UserModel({ email, username, password });
 
+    // TODO: Find an actual email smtp service provider
     const emailValidationResult = await sendEmailToValidate(email);
 
     if (!emailValidationResult.success) {
