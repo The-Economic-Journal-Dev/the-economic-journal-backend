@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { UserModel } from "../../models/UserModel";
-import validateRegister from "../../utils/schema-validator";
+import { IUser, UserModel } from "../../models/UserModel";
+import validateRegister from "../../utils/user-schema-validator";
 import sendEmailToValidate from "../../utils/email-validator";
 import {
   EmailVerificationTokenModel,
@@ -31,7 +31,7 @@ const localRegisterMethod = async (
     confirmPassword,
   });
 
-  if (schemaValidationResult.status !== StatusCodes.OK) {
+  if (!schemaValidationResult.success) {
     return res
       .status(schemaValidationResult.status)
       .json({ success: false, msg: schemaValidationResult.msg });
@@ -51,8 +51,9 @@ const localRegisterMethod = async (
     }
 
     // Create a new user if email and username are unique
-    const newUser = new UserModel({ email, username, password });
+    const newUser: IUser = new UserModel({ email, username, password });
 
+    // TODO: Find an actual email smtp service provider
     const emailValidationResult = await sendEmailToValidate(email);
 
     if (!emailValidationResult.success) {

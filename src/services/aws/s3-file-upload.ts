@@ -1,21 +1,27 @@
 import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
-import stream from "stream";
 
-// Define the upload options
+// Define the upload options interface
 export interface UploadOptions {
-  Bucket: string;
-  Key: string;
-  Body: Buffer | Uint8Array | Blob | string | ReadableStream | Readable;
-  ContentType?: string;
+  Bucket: string; // The name of the S3 bucket
+  Key: string; // The key (path) where the file will be stored in the bucket
+  Body: Buffer | Uint8Array | Blob | string | ReadableStream | Readable; // The content to be uploaded
+  ContentType?: string; // Optional: The MIME type of the file
 }
 
-// Function to upload a file to the S3 bucket
-const uploadFileToS3SerVice = async (
+/**
+ * Uploads a file to an S3 bucket.
+ *
+ * @param config - The upload options, including bucket name, key, and body.
+ * @param s3Client - The S3 client instance.
+ * @returns Promise<void> - A promise that resolves when the upload is complete.
+ * @throws Will throw an error if the upload fails.
+ */
+const uploadFileToS3Service = async (
   config: UploadOptions,
   s3Client: S3Client,
-) => {
+): Promise<void> => {
   // Create the upload parameters
   const uploadParams: PutObjectCommandInput = {
     Bucket: config.Bucket,
@@ -30,6 +36,7 @@ const uploadFileToS3SerVice = async (
       params: uploadParams,
     });
 
+    // Listen to the upload progress event
     parallelUploads3.on("httpUploadProgress", (progress) => {
       console.log(progress);
     });
@@ -43,4 +50,4 @@ const uploadFileToS3SerVice = async (
   }
 };
 
-export default uploadFileToS3SerVice;
+export default uploadFileToS3Service;
