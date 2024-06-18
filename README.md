@@ -137,7 +137,16 @@ fetch("/something")
 
 ## Errors
 
-- Currently if there are any errors during a request, a JSON will be returned with a `success` value of `false` and the error message will be in the `msg` property _(Most of the time)_
+- Currently if there are any errors during a request, a JSON will be returned with a `success` value of `false` and an error object like this:
+
+```json
+{
+  "error": {
+    "message": "An error occurred"
+  }
+}
+```
+
 - Let me know if you want errors to be done differently
 
 # Posts (WIP)

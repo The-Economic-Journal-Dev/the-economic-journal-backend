@@ -16,10 +16,7 @@ const RegisterMethodFactory = (
     console.log(`Authentication method ${req.params.method} returned`);
     return registrationMethod(req, res, next);
   } catch (error) {
-    res.status(StatusCodes.METHOD_NOT_ALLOWED).json({
-      success: false,
-      msg: `Authentication method ${req.params.method} is not supported`,
-    });
+    throwError(error as Error, StatusCodes.METHOD_NOT_ALLOWED);
   }
 };
 

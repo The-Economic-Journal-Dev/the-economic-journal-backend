@@ -9,9 +9,7 @@ const checkSession = (req: Request, res: Response) => {
       user: req.session.user,
     });
   } else {
-    res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ success: false, msg: "No active session" });
+    throwError("No active session", StatusCodes.UNAUTHORIZED);
   }
 };
 

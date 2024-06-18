@@ -1,5 +1,7 @@
 import "dotenv/config"; // Import and configure dotenv to load environment variables
 import "express-async-errors"; // Import express-async-errors for better error handling
+import "./utils/throw-error-utils";
+import errorHandler from "./middleware/error-handler";
 import compression from "compression"; // Import compression for compressing responses
 
 import express from "express"; // Import Express
@@ -75,6 +77,8 @@ import "./config/register-config";
 // Routes
 app.use(mainRoutes);
 app.use("/auth", authRoutes);
+
+app.use(errorHandler);
 
 const port = process.env.PORT || 3000; // Set the port from the environment variable or default to 3000
 app.listen(port, () => {
