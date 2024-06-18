@@ -57,9 +57,10 @@ const localRegisterMethod = async (
     const emailValidationResult = await sendEmailToValidate(email);
 
     if (!emailValidationResult.success) {
-      return res
-        .status(emailValidationResult.status as number)
-        .json({ success: false, msg: emailValidationResult.msg });
+      return res.status(emailValidationResult.status as number).json({
+        success: false,
+        msg: emailValidationResult.msg,
+      });
     }
 
     const session = await UserModel.startSession();
