@@ -82,10 +82,9 @@ const localRegisterMethod = async (
 
       req.login(newUser, (error) => {
         if (error) {
-          return next(error);
+          console.log(error);
         }
         console.log("User logged in:", req.user);
-        return next();
       });
 
       console.log("Register middleware finished");

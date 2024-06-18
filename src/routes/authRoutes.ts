@@ -6,6 +6,7 @@ import authGuard from "../middleware/auth-guard";
 import { Request, Response } from "express";
 import activateUser from "../controllers/activate-user";
 import checkSession from "../controllers/check-session";
+import upload from "../config/multer-config";
 
 import express from "express";
 import { StatusCodes } from "http-status-codes";
@@ -13,14 +14,20 @@ const router = express.Router();
 
 router
   .route("/register/:method")
-  .post(RegisterMethodFactory, authGuard, (req: Request, res: Response) => {
-    res
-      .status(StatusCodes.OK)
-      .json({ success: true, msg: "Register successful" });
-  });
+  .post(
+    upload.none(),
+    RegisterMethodFactory,
+    authGuard,
+    (req: Request, res: Response) => {
+      res
+        .status(StatusCodes.OK)
+        .json({ success: true, msg: "Register successful" });
+    },
+  );
 router
   .route("/login/:method")
   .get(
+    upload.none(),
     LoginAuthenticationFactory,
     regenerateSession,
     authGuard,
