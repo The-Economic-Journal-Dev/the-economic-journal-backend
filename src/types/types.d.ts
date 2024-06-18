@@ -13,6 +13,12 @@ export interface File {
 }
 
 declare global {
+  /**
+   * Throws an HTTP error with an optional status code.
+   * @param {string | Error} messageOrError - The error message or an Error object.
+   * @param {number} [statusCode] - The HTTP status code (optional, defaults to 500).
+   * @throws {HttpError} Throws an HTTP error with the provided message and status code.
+   */
   function throwError(message: string | Error, statusCode?: number): void;
   namespace Express {
     interface Request {
