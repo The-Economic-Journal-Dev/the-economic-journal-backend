@@ -13,13 +13,17 @@ export interface File {
 }
 
 declare global {
+  function throwError(message: string | Error, statusCode?: number): void;
   namespace Express {
     interface Request {
       user?: {
-        id: string;
+        active: boolean;
+        _id: string; // Using string because Mongoose converts ObjectId to string
+        email: string;
         username: string;
+        password: string;
+        __v: number;
       };
-      authMethod?: string;
       files?: File[];
       file?: File;
     }

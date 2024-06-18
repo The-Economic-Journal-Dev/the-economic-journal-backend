@@ -17,10 +17,10 @@ const LoginAuthenticationMethodFactory = (
     console.log(`Authentication method ${req.params.method} returned`);
     return authenticationMethod(req, res, next);
   } catch (error) {
-    res.status(StatusCodes.METHOD_NOT_ALLOWED).json({
-      success: false,
-      msg: `Authentication method ${req.params.method} is not supported`,
-    });
+    throwError(
+      `Authentication method ${req.params.method} is not supported`,
+      StatusCodes.METHOD_NOT_ALLOWED,
+    );
   }
 };
 

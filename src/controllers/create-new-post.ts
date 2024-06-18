@@ -2,6 +2,7 @@ import { request, Request, Response } from "express";
 import { PostModel, IPost } from "../models/PostModel";
 import validatePost from "../utils/post-validator";
 import uploadFileToS3 from "../utils/upload-file-to-s3";
+import { StatusCodes } from "http-status-codes";
 
 const createNewPost = async (req: Request, res: Response) => {
   const { title, summary, postBody } = req.body;
@@ -11,8 +12,12 @@ const createNewPost = async (req: Request, res: Response) => {
     imageUrl = uploadFileToS3(req.file);
   }
 
-  // TODO: find a way to get the userID though the session or the request
-  const authorId = "get from db though session";
+  let authorId;
+  if (req.user) {
+    authorId = (req.user as any)._id; // req.user as any because the fucking type declaration won't work
+  } else {
+    return throwError("User not logged in", StatusCodes.UNAUTHORIZED);
+  }
 
   const postValidationResult = validatePost({
     authorId,
@@ -23,9 +28,7 @@ const createNewPost = async (req: Request, res: Response) => {
   });
 
   if (!postValidationResult.success) {
-    return res
-      .status(postValidationResult.status)
-      .json({ success: false, msg: postValidationResult.msg });
+    throwError(postValidationResult.msg, postValidationResult.status);
   }
 
   try {
@@ -38,6 +41,10 @@ const createNewPost = async (req: Request, res: Response) => {
     });
 
     await newPost.save();
+
+    res
+      .status(201)
+      .json({ success: true, msg: "Post created successfully", post: newPost });
   } catch (error) {
     throw error;
   }
