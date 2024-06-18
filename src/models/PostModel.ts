@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema, Model } from "mongoose";
 
-// TypeScript interface to define the schema fields
+// TypeScript interface to define the schema fields for Post
 interface IPost extends Document {
   authorId: mongoose.Types.ObjectId;
   title: string;
@@ -9,6 +9,30 @@ interface IPost extends Document {
   summary: string;
   postBody: Object;
 }
+
+interface IPostBody extends Document {}
+
+// Custom validation function to ensure only one of the fields is present
+const contentTypeValidator = function (type: string) {
+  const fields = ["Paragraph", "Header", "Quote"];
+  return fields.includes(type);
+};
+
+// Define the schema with optional fields and custom validation
+const ContentSchema = new Schema({
+  type: {
+    type: String,
+    required: true,
+    validate: {
+      validator: contentTypeValidator,
+      message: "{VALUE} is not a valid content type.",
+    },
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+});
 
 const PostSchema: Schema<IPost> = new Schema<IPost>({
   authorId: {
@@ -34,7 +58,7 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
     type: String,
   },
   postBody: {
-    type: Object,
+    type: [ContentSchema],
     required: true,
   },
 });
