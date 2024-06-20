@@ -1,4 +1,3 @@
-import * as express from "express";
 import { SessionData } from "express-session";
 import { Transform } from "stream";
 import "express-session";
@@ -13,7 +12,6 @@ export interface File {
 }
 
 declare global {
-  function throwError(message: string | Error, statusCode?: number): void;
   namespace Express {
     interface Request {
       user?: {
@@ -34,7 +32,10 @@ declare global {
 declare module "express-session" {
   interface SessionData {
     views: number;
-    username: string;
+  }
+  interface Session {
+    user?: { [key: string]: any }; // Adjust the type according to your user object structure
+    views: number;
   }
 }
 

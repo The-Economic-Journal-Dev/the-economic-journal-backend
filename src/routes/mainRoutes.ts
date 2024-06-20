@@ -26,7 +26,7 @@ router.route("/protected").get(authGuard, (req: Request, res: Response) => {
   res.json({
     success: true,
     msg: "User authenticated wtih a session",
-    user: req.session.user,
+    user: req.user,
   });
 });
 
