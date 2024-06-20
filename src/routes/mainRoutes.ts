@@ -22,5 +22,12 @@ router.route("/dashboard").get(authGuard, (req: Request, res: Response) => {
 router.route("/verify").get((req: Request, res: Response) => {
   res.sendFile(path.join(process.env.BASE_DIR!, "public", "verify-email.html"));
 });
+router.route("/protected").get(authGuard, (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    msg: "User authenticated wtih a session",
+    user: req.user,
+  });
+});
 
 export default router;

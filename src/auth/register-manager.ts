@@ -32,21 +32,17 @@ class RegistrationManager {
     return (req: Request, res: Response, next: NextFunction): void => {
       console.log("RegistrationManager called with method:", methodName);
 
-      try {
-        const registerMethod = this.methods[methodName];
+      const registerMethod = this.methods[methodName];
 
-        if (!registerMethod) {
-          throw new Error(`Method ${methodName} is not supported`);
-        }
-
-        console.log(`Register method ${methodName} returned`);
-        return registerMethod(req, res, next);
-      } catch (error) {
-        res.status(StatusCodes.METHOD_NOT_ALLOWED).json({
-          success: false,
-          msg: `Register method ${methodName} is not supported`,
-        });
+      if (!registerMethod) {
+        throwError(
+          `Register method ${methodName} is not supported`,
+          StatusCodes.METHOD_NOT_ALLOWED,
+        );
       }
+
+      console.log(`Register method ${methodName} returned`);
+      return registerMethod(req, res, next);
     };
   }
 }

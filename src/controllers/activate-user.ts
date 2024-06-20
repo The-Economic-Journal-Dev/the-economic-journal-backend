@@ -21,18 +21,15 @@ const activateUser = async (req: Request, res: Response) => {
   });
 
   if (!emailVerificationToken) {
-    return res.status(StatusCodes.NOT_FOUND).json({
-      success: false,
-      msg: "Invalid token or token doesn't exist",
-    });
+    return throwError(
+      "Invalid token or token doesn't exist",
+      StatusCodes.NOT_FOUND,
+    );
   }
 
   const isCodeValid = emailVerificationToken.code === code;
   if (!isCodeValid) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      success: false,
-      msg: "Invalid code",
-    });
+    return throwError("Invalid code", StatusCodes.BAD_REQUEST);
   }
 
   // Find and update the user to set their active status to true
