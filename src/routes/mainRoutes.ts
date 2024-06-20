@@ -10,18 +10,9 @@ const router = express.Router();
 
 router.route("/api/views").get(viewsCounter);
 router
-  .route("/api/blog/upload")
+  .route("/api/post")
   .post(authGuard, upload.single("image"), createNewPost);
 
-router.route("/").get((req: Request, res: Response) => {
-  res.sendFile(path.join(process.env.BASE_DIR!, "public", "index.html"));
-});
-router.route("/dashboard").get(authGuard, (req: Request, res: Response) => {
-  res.sendFile(path.join(process.env.BASE_DIR!, "public", "dashboard.html"));
-});
-router.route("/verify").get((req: Request, res: Response) => {
-  res.sendFile(path.join(process.env.BASE_DIR!, "public", "verify-email.html"));
-});
 router.route("/protected").get(authGuard, (req: Request, res: Response) => {
   res.json({
     success: true,

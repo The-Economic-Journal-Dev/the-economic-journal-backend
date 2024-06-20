@@ -17,7 +17,7 @@ import authRoutes from "./routes/authRoutes"; // Import authorization routes
 import mainRoutes from "./routes/mainRoutes"; // Import the main routes serving the HTML
 
 import path from "path"; // Import path to use for file path for compatibility with different operating systems
-import cors from "cors"; // Import CORS
+import serveStatic from "serve-static";
 
 // Middleware to compress responses from the server
 app.use(
@@ -33,16 +33,11 @@ app.use(
   }),
 );
 
-// Middleware to use CORS
-app.use(cors());
-
 // Middleware to serve static files from the 'public' directory
-app.use(express.static(path.join(process.env.BASE_DIR!, "public")));
+app.use(serveStatic(path.join(process.env.BASE_DIR!, "public")));
 
 // Connect to mongo db
 connectToDB(process.env.MONGO_URI!);
-
-// Setup mongo store for session
 
 // Init session using the mongo store
 app.use(
@@ -82,5 +77,5 @@ app.use(errorHandler);
 
 const port = process.env.PORT || 3000; // Set the port from the environment variable or default to 3000
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port} on ${process.env.NODE_ENV}`);
 });
