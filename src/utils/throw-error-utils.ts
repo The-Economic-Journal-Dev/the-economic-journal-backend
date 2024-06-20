@@ -1,6 +1,6 @@
 import { HttpError } from "../errors/custom-errors";
 
-global.throwError = function (
+const throwError = function (
   messageOrError: string | Error,
   statusCode?: number,
 ) {
@@ -19,3 +19,16 @@ global.throwError = function (
 
   throw error;
 };
+
+declare global {
+  /**
+   * Throws an HttpError with the given message or Error instance.
+   *
+   * @param {string | Error} messageOrError - The error message or Error instance.
+   * @param {number} [statusCode] - Optional HTTP status code.
+   * @throws {HttpError} - Throws an HttpError with the specified message and status code.
+   */
+  function throwError(message: string | Error, statusCode?: number): void;
+}
+
+(global as any).throwError = throwError;

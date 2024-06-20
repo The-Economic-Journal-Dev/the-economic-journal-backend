@@ -6,7 +6,7 @@ const checkSession = (req: Request, res: Response) => {
     res.json({
       success: true,
       msg: "Session is active",
-      user: req.session.user,
+      user: req.user,
     });
   } else {
     throwError("No active session", StatusCodes.UNAUTHORIZED);
