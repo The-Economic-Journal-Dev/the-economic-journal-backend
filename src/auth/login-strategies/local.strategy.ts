@@ -30,7 +30,7 @@ const verifyCallback: VerifyFunction = async (username, password, done) => {
 
     if (!isPasswordValid) {
       return done(null, false, {
-        message: "Invalid email or username and password.",
+        message: "Invalid password.",
       });
     }
 

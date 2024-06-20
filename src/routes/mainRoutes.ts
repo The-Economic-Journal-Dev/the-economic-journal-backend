@@ -13,4 +13,12 @@ router
   .route("/api/post")
   .post(authGuard, upload.single("image"), createNewPost);
 
+router.route("/protected").get(authGuard, (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    msg: "User authenticated wtih a session",
+    user: req.user,
+  });
+});
+
 export default router;

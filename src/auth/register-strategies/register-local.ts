@@ -32,9 +32,7 @@ const localRegisterMethod = async (
   });
 
   if (!schemaValidationResult.success) {
-    return res
-      .status(schemaValidationResult.status)
-      .json({ success: false, msg: schemaValidationResult.msg });
+    throwError(schemaValidationResult.msg, schemaValidationResult.status);
   }
 
   try {
@@ -45,9 +43,7 @@ const localRegisterMethod = async (
 
     if (existingUser) {
       // If the user already exists, send a 400 Bad Request response
-      return res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ success: false, msg: "Email or username already exists" });
+      throwError("Email or username already exists", StatusCodes.BAD_REQUEST);
     }
 
     // Create a new user if email and username are unique
@@ -57,10 +53,7 @@ const localRegisterMethod = async (
     const emailValidationResult = await sendEmailToValidate(email);
 
     if (!emailValidationResult.success) {
-      return res.status(emailValidationResult.status as number).json({
-        success: false,
-        msg: emailValidationResult.msg,
-      });
+      throwError(emailValidationResult.msg, emailValidationResult.status);
     }
 
     const session = await UserModel.startSession();
@@ -82,10 +75,9 @@ const localRegisterMethod = async (
 
       req.login(newUser, (error) => {
         if (error) {
-          return next(error);
+          console.log(error);
         }
         console.log("User logged in:", req.user);
-        return next();
       });
 
       console.log("Register middleware finished");

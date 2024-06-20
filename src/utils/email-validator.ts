@@ -75,7 +75,13 @@ const sendEmailToValidate = async (email: string) => {
     console.log(`${verificationCode}`);
 
     console.log("Message sent: %s", info.messageId);
-    return { success: true, verificationToken, verificationCode };
+    return {
+      success: true,
+      status: 200,
+      msg: `Message sent: ${info.messageId}`,
+      verificationToken,
+      verificationCode,
+    };
   } catch (error) {
     return {
       success: false,
