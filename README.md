@@ -4,9 +4,11 @@
 
 ## PLEASE READ THIS BEFORE ANYTHING
 
-#### 1. To start the server, you must first install Docker Desktop [here](https://www.docker.com/products/docker-desktop/). Then, clone this project by running the following command in a working directory `git clone git@github.com:d8rp/the-entrepreneur-website.git`. Then, open the console in the project folder and run `docker compose -f docker-compose.dev.yaml up`. The server should now be accesible on `localhost:3000`.
+#### 1. To start the server, you must first install Docker Desktop [here](https://www.docker.com/products/docker-desktop/). Then, clone this project by running the following command in a working directory `git clone git@github.com:d8rp/the-entrepreneur-website.git`. Then, open the console in the project folder and run `docker compose -f docker-compose.dev.yaml up`. The server should now be accessible on `localhost:3000`.
 
 #### 2. All the static files like HTML, CSS, JS and images must be stored in the public folder after you cloned the project.
+
+#### 3. You will need to a `.env` file for the server to start and run with no errors. Ask derp for it.
 
 All the URLs are extension of the base URL of {**_insert domain here_**}.
 For example, if the domain is foo.com and the URL in the documentation is `/something` then the URL in the browser should be `foo.com/something`.
