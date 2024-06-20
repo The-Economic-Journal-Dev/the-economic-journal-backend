@@ -1,5 +1,15 @@
 # API Documentation for Frontend Developers
 
+# Very important notes
+
+## PLEASE READ THIS BEFORE ANYTHING
+
+#### 1. To start the server, you must first install Docker Desktop [here](https://www.docker.com/products/docker-desktop/). Then, clone this project by running the following command in a working directory `git clone git@github.com:d8rp/the-entrepreneur-website.git`. Then, open the console in the project folder and run `docker compose -f docker-compose.dev.yaml up`. The server should now be accessible on `localhost:3000`.
+
+#### 2. All the static files like HTML, CSS, JS and images must be stored in the public folder after you cloned the project.
+
+#### 3. You will need to a `.env` file for the server to start and run with no errors. Ask derp for it.
+
 All the URLs are extension of the base URL of {**_insert domain here_**}.
 For example, if the domain is foo.com and the URL in the documentation is `/something` then the URL in the browser should be `foo.com/something`.
 <br></br>
@@ -137,7 +147,18 @@ fetch("/something")
 
 ## Errors
 
-- Currently if there are any errors during a request, a JSON will be returned with a `success` value of `false` and the error message will be in the `msg` property _(Most of the time)_
+- Currently if there are any errors during a request, a JSON will be returned with a `success` value of `false` and an error object like this:
+
+```json
+{
+  "success": false,
+  "error": {
+    "message": "An error occurred",
+    "status": 500
+  }
+}
+```
+
 - Let me know if you want errors to be done differently
 
 # Posts (WIP)
@@ -150,12 +171,12 @@ It's written in pairs of `Name: Type`
 
 ```json
 {
-   title: string,
-   authorId: string,
-   datePublished: Date,
-   imageURL: string,
-   summary: string,
-   postBody: Object[], // Object is a JSON, [] mean its an array
+   "title": string,
+   "authorId": string,
+   "datePublished": Date,
+   "imageURL": string,
+   "summary": string,
+   "postBody": Object[], // Object is a JSON, [] mean its an array
 }
 ```
 
@@ -163,9 +184,9 @@ Every single property should exist but the frontend currently only need to send 
 
 ```json
 {
-   title: string,
-   summary: string,
-   postBody: Object, // Object is a JSON, see "2. postBody" for more information
+   "title": string,
+   "summary": string,
+   "postBody": Object, // Object is a JSON, see "2. postBody" for more information
 }
 ```
 
@@ -183,8 +204,8 @@ Only one element must exist in the each JSON:
 
 ```json
 {
-   paragraph?: string, // ? means that it might not exists
-   header?: string,
-   quote?: string,
+   "paragraph?": string, // ? means that it might not exists
+   "header?": string,
+   "quote?": string,
 }
 ```
