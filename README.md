@@ -149,8 +149,10 @@ fetch("/something")
 
 ```json
 {
+  "success": false,
   "error": {
-    "message": "An error occurred"
+    "message": "An error occurred",
+    "status": 500
   }
 }
 ```
@@ -167,12 +169,12 @@ It's written in pairs of `Name: Type`
 
 ```json
 {
-   title: string,
-   authorId: string,
-   datePublished: Date,
-   imageURL: string,
-   summary: string,
-   postBody: Object[], // Object is a JSON, [] mean its an array
+   "title": string,
+   "authorId": string,
+   "datePublished": Date,
+   "imageURL": string,
+   "summary": string,
+   "postBody": Object[], // Object is a JSON, [] mean its an array
 }
 ```
 
@@ -180,9 +182,9 @@ Every single property should exist but the frontend currently only need to send 
 
 ```json
 {
-   title: string,
-   summary: string,
-   postBody: Object, // Object is a JSON, see "2. postBody" for more information
+   "title": string,
+   "summary": string,
+   "postBody": Object, // Object is a JSON, see "2. postBody" for more information
 }
 ```
 
@@ -200,8 +202,8 @@ Only one element must exist in the each JSON:
 
 ```json
 {
-   paragraph?: string, // ? means that it might not exists
-   header?: string,
-   quote?: string,
+   "paragraph?": string, // ? means that it might not exists
+   "header?": string,
+   "quote?": string,
 }
 ```
