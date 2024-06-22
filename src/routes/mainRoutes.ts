@@ -9,9 +9,15 @@ import createNewPost from "../controllers/create-new-post";
 const router = express.Router();
 
 router.route("/api/views").get(viewsCounter);
-router
-  .route("/api/post")
-  .post(authGuard, upload.single("image"), createNewPost);
+router.route("/api/post").post(
+  upload.fields([
+    {
+      name: "image",
+      maxCount: 1,
+    },
+  ]),
+  createNewPost,
+);
 
 router.route("/protected").get(authGuard, (req: Request, res: Response) => {
   res.json({
