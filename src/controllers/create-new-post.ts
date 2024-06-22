@@ -3,6 +3,7 @@ import { PostModel, IPost } from "../models/PostModel";
 import validatePost from "../utils/post-validator";
 import uploadFileToS3 from "../utils/upload-file-to-s3";
 import { StatusCodes } from "http-status-codes";
+import upload from "../config/multer-config";
 
 // Define the types for files
 interface MulterFiles {
@@ -60,4 +61,12 @@ const createNewPost = async (req: Request, res: Response) => {
   }
 };
 
-export default createNewPost;
+export default [
+  upload.fields([
+    {
+      name: "image",
+      maxCount: 1,
+    },
+  ]),
+  createNewPost,
+];
