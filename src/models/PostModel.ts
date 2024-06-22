@@ -7,7 +7,7 @@ interface IPost extends Document {
   datePublished: Date;
   imageUrl: string;
   summary: string;
-  postBodyUrl: string;
+  postBody: string;
 }
 
 const PostSchema: Schema<IPost> = new Schema<IPost>({
@@ -37,6 +37,8 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
     type: String,
     required: true,
     select: false,
+    minlength: 1,
+    maxlength: 2000,
   },
 });
 

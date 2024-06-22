@@ -12,9 +12,10 @@ const PostSchema = Joi.object({
   }),
   imageUrl: Joi.string().allow(""),
   summary: Joi.string().allow(""),
-  postBody: Joi.string().min(1).required().messages({
+  postBody: Joi.string().min(1).max(2000).required().messages({
     "any.empty": "Body is required",
     "any.min": "Body must be at least 1 characters long",
+    "any.max": "Body must be less than 2000 characters long",
   }),
 });
 

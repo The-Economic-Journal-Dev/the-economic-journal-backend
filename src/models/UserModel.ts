@@ -29,6 +29,10 @@ const UserSchema: Schema<IUser> = new Schema<IUser>({
     type: Boolean,
     default: false, // Default value for "active" attribute
   },
+  role: {
+    type: String,
+    default: "default",
+  },
 });
 
 UserSchema.pre<IUser>("save", async function (next) {

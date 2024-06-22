@@ -41,6 +41,12 @@ router.route("/logout").delete(authGuard, logout);
 
 router.route("/verify").post(activateUser);
 
-router.route("/check-session").get(checkSession);
+router.route("/check-session").get(authGuard, (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    msg: "User authenticated with a session",
+    user: req.user,
+  });
+});
 
 export default router;
