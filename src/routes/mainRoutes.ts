@@ -8,16 +8,27 @@ import {
   editPost,
   deletePost,
 } from "../controllers/posts";
+import {
+  deleteUser,
+  editUserProfile,
+  getUserProfile,
+} from "../controllers/users";
 
 const router = express.Router();
 
-router.route("/api/views").get(viewsCounter);
-router.route("/api/post").post(createNewPost).get(getPosts);
+router.route("/api/views").get(authGuard, viewsCounter);
+router.route("/api/posts").post(authGuard, createNewPost).get(getPosts);
 router
   .route("/api/post/:id")
   .get(getSinglePost)
-  .patch(editPost)
-  .delete(deletePost);
+  .patch(authGuard, editPost)
+  .delete(authGuard, deletePost);
+
+router
+  .route("/api/user/:id")
+  .patch(authGuard, editUserProfile)
+  .delete(authGuard, deleteUser)
+  .get(getUserProfile);
 
 router.route("/protected").get(authGuard, (req: Request, res: Response) => {
   res.json({

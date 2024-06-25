@@ -4,7 +4,7 @@ import RegisterMethodFactory from "../auth/register-method-factory";
 import regenerateSession from "../middleware/regenerateSession";
 import authGuard from "../middleware/auth-guard";
 import { Request, Response } from "express";
-import activateUser from "../controllers/activate-user";
+import { activateUser } from "../controllers/users";
 import checkSession from "../controllers/check-session";
 import upload from "../config/multer-config";
 

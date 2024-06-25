@@ -237,7 +237,7 @@ Creates a new post with specified details and optionally uploads an image.
 
 ### URL:
 
-`/api/post`
+`/api/posts`
 
 ### Method:
 
@@ -273,7 +273,7 @@ Retrieves a list of posts with optional pagination and content inclusion.
 
 ### URL:
 
-`/api/post`
+`/api/posts`
 
 ### Method:
 
