@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import PostSchema from "../schema/PostSchema";
+import { PostSchema } from "../schema/PostSchema";
 
 // Function to validate the request body
 const validatePost = (body: any) => {
@@ -25,4 +25,4 @@ const validatePost = (body: any) => {
   };
 };
 
-export default validatePost;
+export { validatePost };

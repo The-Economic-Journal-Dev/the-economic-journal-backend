@@ -27,12 +27,20 @@ fetch("/something")
 
 1. [Authentication Endpoints](#authentication)
    1. [Register](#register-endpoint)
-   2. [Login](#login-endpoint)
-   3. [Check Session](#check-session-endpoint)
-   4. [Logout](#logout-endpoint)
+   2. [Activate User](#activate-user-endpoint)
+   3. [Login](#login-endpoint)
+   4. [Check Session](#check-session-endpoint)
+   5. [Logout](#logout-endpoint)
 2. [Posts Endpoints](#posts)
    1. [Tips and Tricks](#tips-and-tricks)
-3. [Errors](#errors)
+   2. [Quill HTML editor](#quill-html-editor)
+   3. [Create a New Post](#create-a-new-post)
+   4. [Get Posts](#get-posts)
+   5. [Get Single Post](#get-single-post)
+   6. [Edit Post](#edit-post)
+   7. [Delete Post](#edit-post)
+3. [User Profile Endpoints](#user-profile-endpoints)
+4. [Errors](#errors)
 
 # Authentication
 
@@ -68,6 +76,37 @@ fetch("/something")
 {
   "success": true,
   "msg": "Register successful"
+}
+```
+
+## Activate User Endpoint
+
+### URL
+
+`/auth/verify`
+
+### Method
+
+`POST`
+
+### QUERY
+
+add an `?=` after the URL lie this: `/auth/verify?token={INSERT TOKEN HERE}`
+
+### Request Body
+
+```json
+{
+  "code": "123456"
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "msg": "Email validation successful"
 }
 ```
 
@@ -355,7 +394,7 @@ Updates details of an existing post identified by its ID.
 
 `image (file): Optional updated image file to upload.`
 
-### Request:
+### Request Body:
 
 ```json
 {
@@ -411,6 +450,104 @@ Deletes an existing post identified by its ID.
 {
   "success": true,
   "msg": "Post deleted successfully"
+}
+```
+
+# User Profile Endpoints
+
+## Edit User Profile
+
+Updates details of an existing user identified by their ID.
+
+### URL:
+
+`/api/user/:id`
+
+### Method:
+
+`PATCH`
+
+### Path Parameters:
+
+`id (string): ID of the user to retrieve and edit.`
+
+### Request Body:
+
+```json
+{
+  "email": "email@email.com", // (optional): The new email address.
+  "username": "username", // (optional): The new username.
+  "password": "password" // (required): The current password to verify the user's identity.
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "user": {
+    // Updated user object
+  }
+}
+```
+
+## Delete User
+
+Delete an existing user identified by their ID.
+
+### URL:
+
+`/api/user/:id`
+
+### Method:
+
+`DELETE`
+
+### Path Parameters:
+
+`id (string): ID of the user to be deleted.`
+
+### Request Body:
+
+```json
+{
+  "password": "password" // (required): The current password to verify the user's identity.
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "msg": "Profile deleted successfully"
+}
+```
+
+## Get User Profile
+
+Get an existing user's profile identified by their ID.
+
+### URL:
+
+`/api/user/:id`
+
+### Method:
+
+`GET`
+
+### Path Parameters:
+
+`id (string): ID of the user to be retrieved.`
+
+### Response
+
+```json
+{
+  "success": true,
+  "msg": "Profile retrieved successfully"
 }
 ```
 
