@@ -19,4 +19,4 @@ const PostSchema = Joi.object({
   }),
 });
 
-export default PostSchema;
+export { PostSchema };

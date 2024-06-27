@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { PostModel, IPost } from "../models/PostModel";
-import validatePost from "../utils/post-validator";
+import { validatePost } from "../utils/post-validator";
 import uploadFileToS3 from "../utils/upload-file-to-s3";
 import { StatusCodes } from "http-status-codes";
 import upload from "../config/multer-config";
@@ -9,6 +9,16 @@ import authGuard from "../middleware/auth-guard";
 // Define the types for files
 interface MulterFiles {
   [fieldname: string]: Express.Multer.File[];
+}
+
+/**
+ * Checks if the mimetype is one of the accepted image types (gif, jpg, jpeg, png).
+ * @param {string} mimetype - The mimetype to check.
+ * @returns {boolean} True if the mimetype is an accepted image type, false otherwise.
+ */
+function isAcceptedMimetype(mimetype: string): boolean {
+  const acceptedImagePattern = /^image\/(gif|jpg|jpeg|png)$/;
+  return acceptedImagePattern.test(mimetype);
 }
 
 const createNewPost = [
@@ -39,6 +49,12 @@ const createNewPost = [
     let imageUrl = "";
     const image = files["image"][0];
     if (image) {
+      if (!isAcceptedMimetype(image.mimetype)) {
+        throwError(
+          `Invalid mimetype for file ${image.filename}.`,
+          StatusCodes.BAD_REQUEST,
+        );
+      }
       imageUrl = await uploadFileToS3(image);
     }
 
@@ -174,7 +190,7 @@ const editPost = [
     const editorId = (req.user as any)._id; // req.user as any because the fucking type declaration won't work
 
     if (!editorId) {
-      throwError("req.user doesn't have an id", StatusCodes.BAD_REQUEST);
+      throwError("The request doesn't have an id", StatusCodes.BAD_REQUEST);
     }
 
     try {
@@ -182,8 +198,7 @@ const editPost = [
       const post = await PostModel.findById(postId);
 
       // Check if the post exists
-      if (post) {
-        // TODO: Make replacement iamge replace the image in the s3 bucket
+      if (post) {  
         let imageUrl = "";
         if ((req.files as MulterFiles)["image"]) {
           const image = files["image"][0];
@@ -201,7 +216,7 @@ const editPost = [
             imageUrl = await uploadFileToS3(image, extractImageName(url));
           }
         }
-
+        
         const postValidationResult = validatePost({
           title,
           imageUrl,
@@ -209,16 +224,10 @@ const editPost = [
           postBody,
         });
 
-    if (!postValidationResult.success) {
-      throwError(postValidationResult.msg, postValidationResult.status);
-    }
+        if (!postValidationResult.success) {
+          throwError(postValidationResult.msg, postValidationResult.status);
+        }
 
-    try {
-      // Find the post by id
-      const post = await PostModel.findById(postId);
-
-      // Check if the post exists
-      if (post) {
         if (imageUrl !== "") {
           post.imageUrl = imageUrl;
         }
@@ -245,11 +254,23 @@ const editPost = [
   },
 ];
 
+// TODO: Only flag the post as deleted and remove it from the db after a week
 const deletePost = [
-  authGuard,
   async (req: Request, res: Response) => {
     try {
       const { id: postId } = req.params;
+
+      if (
+        !req.user ||
+        (req.user as any).role !== "admin" ||
+        (req.user as any).role !== "writer"
+      ) {
+        return throwError(
+          "User not logged in or without the valid permission",
+          StatusCodes.UNAUTHORIZED,
+        );
+      }
+
       const task = await PostModel.findOneAndDelete({ _id: postId });
 
       if (!task) {
@@ -257,6 +278,12 @@ const deletePost = [
           .status(404)
           .json({ success: false, msg: `No post with id: ${postId} found.` });
       }
+
+      return res.status(200).json({
+        success: true,
+        msg: `Post with id: ${postId} deleted.`,
+        post: null,
+      });
     } catch (error) {
       throwError(error as Error);
     }

@@ -18,6 +18,10 @@ import mainRoutes from "./routes/mainRoutes"; // Import the main routes serving 
 
 import path from "path"; // Import path to use for file path for compatibility with different operating systems
 import serveStatic from "serve-static";
+import helmet from "helmet";
+
+// Use Helmet!
+app.use(helmet());
 
 // Middleware to compress responses from the server
 app.use(
@@ -75,7 +79,7 @@ app.use("/auth", authRoutes);
 
 app.use(errorHandler);
 
-const port = process.env.PORT || 3000; // Set the port from the environment variable or default to 3000
+const port = process.env.SERVER_PORT || 3000; // Set the port from the environment variable or default to 3000
 app.listen(port, () => {
   console.log(`Server is running on port ${port} on ${process.env.NODE_ENV}`);
 });
