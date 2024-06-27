@@ -56,10 +56,14 @@ function getExtensionFromMimeType(mimeType: string): string {
  * Uploads a file to an S3 bucket.
  *
  * @param file - The file to be uploaded.
+ * @param filename - (optional) The name of the file to be uploaded
  * @returns A promise that resolves to the URL of the uploaded file.
  * @throws Will throw an error if no file is uploaded or if the upload fails.
  */
-const uploadFileToS3 = async (file: Express.Multer.File): Promise<string> => {
+const uploadFileToS3 = async (
+  file: Express.Multer.File,
+  filename: string | undefined = undefined,
+): Promise<string> => {
   if (!file) {
     throw new Error("No file uploaded");
   }
@@ -67,13 +71,10 @@ const uploadFileToS3 = async (file: Express.Multer.File): Promise<string> => {
   try {
     console.log(`Processing file: ${file.originalname}`);
 
-    const ext = getExtensionFromMimeType(file.mimetype);
+    const ext: string = getExtensionFromMimeType(file.mimetype);
 
-    if (!ext) {
-      throwError("Invalid extension", StatusCodes.BAD_REQUEST);
-    }
-
-    const fileName = generateUniqueImageName(file.fieldname, ext!);
+    // Generate a unique filename if one is not provided
+    let fileName = filename || generateUniqueImageName(file.fieldname, ext);
 
     // Create the upload parameters
     const uploadParams: UploadOptions = {

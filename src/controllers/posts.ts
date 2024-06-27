@@ -128,6 +128,25 @@ const getSinglePost = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Extracts the image name from the given URL.
+ * @param url - The full URL of the image.
+ * @returns The image name extracted from the URL, or undefined if the URL is not valid.
+ */
+function extractImageName(url?: string): string | undefined {
+  const prefix = process.env.CLOUDFRONT_URI;
+  if (prefix) {
+    if (url?.startsWith(prefix)) {
+      return url.replace(prefix, "");
+    }
+  } else {
+    throwError(
+      "No CloudFront URL found. Please set the CLOUDFRONT_URI environment variable.",
+    );
+  }
+  return undefined;
+}
+
 const editPost = [
   authGuard,
   upload.fields([
@@ -158,19 +177,37 @@ const editPost = [
       throwError("req.user doesn't have an id", StatusCodes.BAD_REQUEST);
     }
 
-    let imageUrl = "";
-    const image = files["image"][0];
-    if (image) {
-      imageUrl = await uploadFileToS3(image);
-    }
+    try {
+      // Find the post by id
+      const post = await PostModel.findById(postId);
 
-    const postValidationResult = validatePost({
-      authorId: editorId,
-      title,
-      imageUrl,
-      summary,
-      postBody,
-    });
+      // Check if the post exists
+      if (post) {
+        // TODO: Make replacement iamge replace the image in the s3 bucket
+        let imageUrl = "";
+        if ((req.files as MulterFiles)["image"]) {
+          const image = files["image"][0];
+          if (image) {
+            if (!isAcceptedMimetype(image.mimetype)) {
+              throwError(
+                `Invalid mimetype for file ${image.filename}.`,
+                StatusCodes.BAD_REQUEST,
+              );
+            }
+
+            let url = post.imageUrl;
+
+            // Replace the old image with the new one in the S3 bucket
+            imageUrl = await uploadFileToS3(image, extractImageName(url));
+          }
+        }
+
+        const postValidationResult = validatePost({
+          title,
+          imageUrl,
+          summary,
+          postBody,
+        });
 
     if (!postValidationResult.success) {
       throwError(postValidationResult.msg, postValidationResult.status);
@@ -186,9 +223,11 @@ const editPost = [
           post.imageUrl = imageUrl;
         }
 
-        post.postBody = postBody;
-        post.summary = summary;
-        post.title = title;
+        const newPost = { title, summary, postBody };
+
+        Object.keys(newPost).forEach((key) => {
+          (post as any)[key] = (newPost as any)[key];
+        });
 
         await post.save();
       } else {
