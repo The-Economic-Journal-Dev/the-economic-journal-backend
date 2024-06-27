@@ -25,9 +25,17 @@ const UserSchema: Schema<IUser> = new Schema<IUser>({
     required: [true, "A value of password is required."],
     select: false,
   },
+  profilePictureUrl: {
+    type: String,
+    default: "",
+  },
   active: {
     type: Boolean,
     default: false, // Default value for "active" attribute
+  },
+  role: {
+    type: String,
+    default: "default",
   },
 });
 

@@ -13,7 +13,10 @@ const LoginAuthenticationMethodFactory = (
   );
   try {
     // Passport authentication middleware
-    const authenticationMethod = passport.authenticate(req.params.method);
+    const authenticationMethod = passport.authenticate(req.params.method, {
+      failureRedirect: "/",
+      successRedirect: "/dashboard",
+    });
     console.log(`Authentication method ${req.params.method} returned`);
     return authenticationMethod(req, res, next);
   } catch (error) {

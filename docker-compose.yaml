@@ -1,14 +1,11 @@
 services:
-  api:
+  server:
     build:
       context: .
-      target: development
-    volumes:
-      - ./:/usr/src/app
-      - /usr/src/app/node_modules
+      target: production
     ports:
       - 3000:3000
-    command: npm run dev
     env_file: .env
     environment:
       BASE_DIR: /usr/src/app
+      NODE_ENV: production

@@ -45,6 +45,3 @@ coverage/
 eslint.config.js
 
 # Ignore public built files
-public/browser-app.js
-public/dashboard.html
-public/index.html

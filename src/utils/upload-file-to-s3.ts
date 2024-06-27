@@ -5,6 +5,7 @@ import uploadFileToS3SerVice, {
 } from "../services/aws/s3-file-upload";
 import { S3Client } from "@aws-sdk/client-s3";
 import path from "path";
+import { StatusCodes } from "http-status-codes";
 
 // Define the S3 configuration
 const s3Config: S3Config = {
@@ -22,10 +23,34 @@ const s3Client: S3Client = createS3Client(s3Config);
  * @param identifier - The identifier to include in the filename.
  * @returns The generated unique filename.
  */
-const generateUniqueFilename = (identifier: string): string => {
+const generateUniqueImageName = (
+  identifier: string,
+  extension: string,
+): string => {
   const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-  return `${identifier}-${uniqueSuffix}`;
+  return `${identifier}-${uniqueSuffix}.${extension}`;
 };
+
+/**
+ * Hashmap mapping MIME types to file extensions for common image formats and HTML.
+ */
+const mimeTypeToExtension: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "text/html": "html",
+};
+
+function getExtensionFromMimeType(mimeType: string): string {
+  const extension = mimeTypeToExtension[mimeType];
+
+  if (!extension) {
+    throwError("Invalid MIME type", StatusCodes.BAD_REQUEST);
+  }
+
+  return extension;
+}
 
 /**
  * Uploads a file to an S3 bucket.
@@ -42,13 +67,20 @@ const uploadFileToS3 = async (file: Express.Multer.File): Promise<string> => {
   try {
     console.log(`Processing file: ${file.originalname}`);
 
-    const fileName = generateUniqueFilename(file.fieldname);
+    const ext = getExtensionFromMimeType(file.mimetype);
+
+    if (!ext) {
+      throwError("Invalid extension", StatusCodes.BAD_REQUEST);
+    }
+
+    const fileName = generateUniqueImageName(file.fieldname, ext!);
 
     // Create the upload parameters
     const uploadParams: UploadOptions = {
       Bucket: process.env.AWS_S3_BUCKET_NAME!,
       Key: fileName,
       Body: file.buffer,
+      ContentType: file.mimetype,
     };
 
     // Upload the file to S3

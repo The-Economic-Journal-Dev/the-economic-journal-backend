@@ -4,3 +4,4 @@ node_module/
 eslint.config.js
 .prettierrc
 .prettierignore
+.gitignore

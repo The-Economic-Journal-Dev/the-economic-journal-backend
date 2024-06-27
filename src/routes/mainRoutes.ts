@@ -1,22 +1,39 @@
 import express, { Request, Response } from "express";
-import "dotenv/config"; // Import and configure dotenv to load environment variables
-import path from "path";
 import viewsCounter from "../controllers/views-counter";
 import authGuard from "../middleware/auth-guard";
-import upload from "../config/multer-config";
-import createNewPost from "../controllers/create-new-post";
+import {
+  createNewPost,
+  getPosts,
+  getSinglePost,
+  editPost,
+  deletePost,
+} from "../controllers/posts";
+import {
+  deleteUser,
+  editUserProfile,
+  getUserProfile,
+} from "../controllers/users";
 
 const router = express.Router();
 
-router.route("/api/views").get(viewsCounter);
+router.route("/api/views").get(authGuard, viewsCounter);
+router.route("/api/posts").post(createNewPost).get(getPosts);
 router
-  .route("/api/post")
-  .post(authGuard, upload.single("image"), createNewPost);
+  .route("/api/post/:id")
+  .get(getSinglePost)
+  .patch(editPost)
+  .delete(deletePost);
+
+router
+  .route("/api/user/:id")
+  .patch(editUserProfile)
+  .delete(deleteUser)
+  .get(getUserProfile);
 
 router.route("/protected").get(authGuard, (req: Request, res: Response) => {
   res.json({
     success: true,
-    msg: "User authenticated wtih a session",
+    msg: "User authenticated with a session",
     user: req.user,
   });
 });

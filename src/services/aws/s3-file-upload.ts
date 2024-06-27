@@ -2,18 +2,38 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 
-// Define the upload options interface
+// Define the upload options interface\
+
+/**
+ * Options for uploading a file to S3.
+ */
 export interface UploadOptions {
-  Bucket: string; // The name of the S3 bucket
-  Key: string; // The key (path) where the file will be stored in the bucket
-  Body: Buffer | Uint8Array | Blob | string | ReadableStream | Readable; // The content to be uploaded
-  ContentType?: string; // Optional: The MIME type of the file
+  /**
+   * The name of the S3 bucket.
+   */
+  Bucket: string;
+
+  /**
+   * The key (path) where the file will be stored in the bucket.
+   */
+  Key: string;
+
+  /**
+   * The content to be uploaded.
+   * It can be a Buffer, Uint8Array, Blob, string, ReadableStream, or Readable.
+   */
+  Body: Buffer | Uint8Array | Blob | string | ReadableStream | Readable;
+
+  /**
+   * Optional: The MIME type of the file.
+   */
+  ContentType?: string;
 }
 
 /**
  * Uploads a file to an S3 bucket.
  *
- * @param config - The upload options, including bucket name, key, and body.
+ * @param config - The upload options, including bucket name, key, body and content type.
  * @param s3Client - The S3 client instance.
  * @returns Promise<void> - A promise that resolves when the upload is complete.
  * @throws Will throw an error if the upload fails.
@@ -27,6 +47,7 @@ const uploadFileToS3Service = async (
     Bucket: config.Bucket,
     Key: config.Key,
     Body: config.Body,
+    ContentType: config.ContentType || "application/octet-stream",
   };
 
   try {

@@ -18,7 +18,7 @@ const viewsCounter = (req: Request, res: Response) => {
   req.session.views++;
 
   // Respond with the current view count and username
-  res.json({ views: req.session.views, username: req.user! });
+  res.json({ views: req.session.views, username: (req.user as any).username });
 };
 
 export default viewsCounter;
