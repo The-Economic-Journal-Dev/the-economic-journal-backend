@@ -74,6 +74,9 @@ const uploadFileToS3 = async (
     const ext: string = getExtensionFromMimeType(file.mimetype);
 
     // Generate a unique filename if one is not provided
+    if (filename) {
+      console.log(`File name: ${filename} detected`);
+    }
     let fileName = filename || generateUniqueImageName(file.fieldname, ext);
 
     // Create the upload parameters
@@ -87,7 +90,7 @@ const uploadFileToS3 = async (
     // Upload the file to S3
     await uploadFileToS3SerVice(uploadParams, s3Client);
 
-    return path.join(process.env.CLOUDFRONT_URI!, fileName);
+    return `${process.env.CLOUDFRONT_URI!}/${fileName}`;
   } catch (error) {
     console.log("An error has occurred while uploading file" + error);
     throw error;
