@@ -56,10 +56,14 @@ function getExtensionFromMimeType(mimeType: string): string {
  * Uploads a file to an S3 bucket.
  *
  * @param file - The file to be uploaded.
+ * @param filename - (optional) The name of the file to be uploaded
  * @returns A promise that resolves to the URL of the uploaded file.
  * @throws Will throw an error if no file is uploaded or if the upload fails.
  */
-const uploadFileToS3 = async (file: Express.Multer.File): Promise<string> => {
+const uploadFileToS3 = async (
+  file: Express.Multer.File,
+  filename: string | undefined = undefined,
+): Promise<string> => {
   if (!file) {
     throw new Error("No file uploaded");
   }
@@ -67,13 +71,13 @@ const uploadFileToS3 = async (file: Express.Multer.File): Promise<string> => {
   try {
     console.log(`Processing file: ${file.originalname}`);
 
-    const ext = getExtensionFromMimeType(file.mimetype);
+    const ext: string = getExtensionFromMimeType(file.mimetype);
 
-    if (!ext) {
-      throwError("Invalid extension", StatusCodes.BAD_REQUEST);
+    // Generate a unique filename if one is not provided
+    if (filename) {
+      console.log(`File name: ${filename} detected`);
     }
-
-    const fileName = generateUniqueImageName(file.fieldname, ext!);
+    let fileName = filename || generateUniqueImageName(file.fieldname, ext);
 
     // Create the upload parameters
     const uploadParams: UploadOptions = {
@@ -86,7 +90,7 @@ const uploadFileToS3 = async (file: Express.Multer.File): Promise<string> => {
     // Upload the file to S3
     await uploadFileToS3SerVice(uploadParams, s3Client);
 
-    return path.join(process.env.CLOUDFRONT_URI!, fileName);
+    return `${process.env.CLOUDFRONT_URI!}/${fileName}`;
   } catch (error) {
     console.log("An error has occurred while uploading file" + error);
     throw error;

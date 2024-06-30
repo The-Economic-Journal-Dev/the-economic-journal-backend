@@ -42,7 +42,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Middleware to serve static files from the 'public' directory
-app.use(serveStatic(path.join(process.env.BASE_DIR!, "public")));
+app.use(serveStatic("./public"));
 
 // Connect to mongo db
 connectToDB(process.env.MONGO_URI!);
