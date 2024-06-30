@@ -165,6 +165,7 @@ function extractImageName(url?: string): string | undefined {
 }
 
 const editPost = [
+  authGuard,
   upload.fields([
     {
       name: "image",
