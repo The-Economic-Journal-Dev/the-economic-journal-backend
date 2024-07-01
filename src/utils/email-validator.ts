@@ -81,7 +81,8 @@ const sendEmailToValidate = async (email: string) => {
       success: true,
       status: 200,
       msg: `Message sent: ${info.messageId}`,
-      verificationLink,
+      verificationToken,
+      verificationCode,
     };
   } catch (error) {
     return {
