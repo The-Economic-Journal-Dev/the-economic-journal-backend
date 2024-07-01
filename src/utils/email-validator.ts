@@ -60,13 +60,15 @@ const sendEmailToValidate = async (email: string) => {
 
   // Send verification email
   try {
+    const verificationLink = `${process.env.BASE_URL}/verify?token=${encodeURIComponent(verificationToken)}`;
+
     const info = await transporter.sendMail({
-      from: '"Your App Name" gussie68@ethereal.email', // Replace with your sender address
+      from: process.env.SENDER_EMAIL, // Replace with your sender address
       to: email, // List of receivers
       subject: "Email Verification", // Subject line
       text: "Please verify your email by clicking the following link:", // Plain text body
       html: `<b>Please verify your email by clicking the following link:</b> 
-      <a href="${process.env.BASE_URL}/verify?token=${encodeURIComponent(verificationToken)}">Verify Email Using Code: ${verificationCode}</a>`, // HTML body
+      <a href="${verificationLink}">Verify Email Using Code: ${verificationCode}</a>`, // HTML body
     });
 
     console.log(
@@ -79,8 +81,7 @@ const sendEmailToValidate = async (email: string) => {
       success: true,
       status: 200,
       msg: `Message sent: ${info.messageId}`,
-      verificationToken,
-      verificationCode,
+      verificationLink,
     };
   } catch (error) {
     return {
