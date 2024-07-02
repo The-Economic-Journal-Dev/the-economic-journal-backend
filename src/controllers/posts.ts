@@ -70,7 +70,7 @@ const createNewPost = [
     }
 
     try {
-      const newPost: IPost = new PostModel({
+      const newPost = new PostModel({
         authorId,
         title,
         imageUrl,

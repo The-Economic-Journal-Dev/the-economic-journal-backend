@@ -1,13 +1,14 @@
 import mongoose, { Document, Schema, Model } from "mongoose";
 
 // TypeScript interface to define the schema fields for Post
-interface IPost extends Document {
+interface IPost {
   authorId: mongoose.Types.ObjectId;
   title: string;
   datePublished: Date;
-  imageUrl: string;
-  summary: string;
+  imageUrl?: string;
+  summary?: string;
   postBody: string;
+  category: "Technology" | "Science" | "Health" | "Business" | "Other";
 }
 
 const PostSchema: Schema<IPost> = new Schema<IPost>({
@@ -40,7 +41,14 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
     minlength: 1,
     maxlength: 2000,
   },
+  category: {
+    type: String,
+    enum: ["Technology", "Science", "Health", "Business", "Other"], // Add your desired categories
+    required: true,
+  },
 });
+
+PostSchema.index({ category: 1, datePublished: -1 });
 
 const PostModel: Model<IPost> = mongoose.model<IPost>("Post", PostSchema);
 
