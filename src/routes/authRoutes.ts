@@ -26,8 +26,7 @@ router
   );
 router
   .route("/login/:method")
-  .get(
-    upload.none(),
+  .post(
     LoginAuthenticationFactory,
     regenerateSession,
     authGuard,
