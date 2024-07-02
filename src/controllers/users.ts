@@ -185,10 +185,10 @@ const deleteUser = [
   },
 ];
 
-const getUserProfile = (req: Request, res: Response) => {
+const getUserProfile = async (req: Request, res: Response) => {
   const { userId } = req.params;
 
-  const user = UserModel.findById(userId);
+  const user = await UserModel.findById(userId);
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -196,4 +196,53 @@ const getUserProfile = (req: Request, res: Response) => {
   });
 };
 
-export { activateUser, editUserProfile, deleteUser, getUserProfile };
+const changeUserPassword = async (req: Request, res: Response) => {
+  const { email, username, oldPassword, newPassword, confirmNewPassword } =
+    req.body;
+
+  // Check if all required fields are provided
+  if (!username || !oldPassword || !newPassword || !confirmNewPassword) {
+    throwError("Required fields are missing", StatusCodes.BAD_REQUEST);
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    throwError(
+      "New password and confirmation do not match.",
+      StatusCodes.BAD_REQUEST,
+    );
+  }
+
+  // Find the user by ID
+  // Find the user by username or email
+  const user: IUser | null = await UserModel.findOne({
+    $or: [{ username: username }, { email: email }],
+  }).select("+password");
+
+  if (!user) {
+    throwError(
+      `User not found or not authorized for this action.`,
+      StatusCodes.UNAUTHORIZED,
+    );
+  }
+
+  // Verify old password
+  const isPasswordValid = await bcryptjs.compare(oldPassword, user!.password);
+
+  if (!isPasswordValid) {
+    throwError(`Invalid password.`, StatusCodes.UNAUTHORIZED);
+  }
+
+  // Update the user's password
+  user!.password = newPassword;
+
+  // Save the updated user
+  await user!.save();
+};
+
+export {
+  activateUser,
+  editUserProfile,
+  deleteUser,
+  getUserProfile,
+  changeUserPassword,
+};
