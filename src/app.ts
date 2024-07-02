@@ -21,7 +21,11 @@ import serveStatic from "serve-static";
 import helmet from "helmet";
 
 // Use Helmet!
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: true,
+  }),
+);
 
 // Middleware to compress responses from the server
 app.use(
