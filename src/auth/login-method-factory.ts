@@ -15,7 +15,7 @@ const LoginAuthenticationMethodFactory = (
     // Passport authentication middleware
     const authenticationMethod = passport.authenticate(req.params.method, {
       failureRedirect: "/",
-      successRedirect: "/dashboard",
+      successRedirect: "/",
     });
     console.log(`Authentication method ${req.params.method} returned`);
     return authenticationMethod(req, res, next);
