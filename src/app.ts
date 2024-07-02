@@ -19,13 +19,11 @@ import mainRoutes from "./routes/mainRoutes"; // Import the main routes serving 
 import path from "path"; // Import path to use for file path for compatibility with different operating systems
 import serveStatic from "serve-static";
 import helmet from "helmet";
+import cors from "cors";
 
 // Use Helmet!
-app.use(
-  helmet({
-    crossOriginResourcePolicy: true,
-  }),
-);
+app.use(helmet());
+app.use(cors());
 
 // Middleware to compress responses from the server
 app.use(
