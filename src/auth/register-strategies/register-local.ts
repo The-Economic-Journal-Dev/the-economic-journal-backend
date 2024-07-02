@@ -93,7 +93,7 @@ const localRegisterMethod = async (
     return next();
   } catch (error) {
     // Handle any errors that occur during user creation
-    return next(error); // Pass the error to the error-handling middleware
+    throwError(error as Error);
   }
 };
 
