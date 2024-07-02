@@ -9,35 +9,39 @@ interface IUser extends Document {
   active: boolean;
 }
 
-const UserSchema: Schema<IUser> = new Schema<IUser>({
-  email: {
-    type: String,
-    required: [true, "A value of email is required."],
-    unique: true,
+const UserSchema: Schema<IUser> = new Schema<IUser>(
+  {
+    email: {
+      type: String,
+      required: [true, "A value of email is required."],
+      unique: true,
+    },
+    username: {
+      type: String,
+      required: [true, "A value of username is required."],
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, "A value of password is required."],
+      select: false,
+    },
+    profilePictureUrl: {
+      type: String,
+      default: "",
+    },
+    active: {
+      type: Boolean,
+      default: false, // Default value for "active" attribute
+    },
+    role: {
+      type: String,
+      enum: ["reader", "writer", "admin"],
+      default: "reader", // Default value for "role" attribute
+    },
   },
-  username: {
-    type: String,
-    required: [true, "A value of username is required."],
-    trim: true,
-  },
-  password: {
-    type: String,
-    required: [true, "A value of password is required."],
-    select: false,
-  },
-  profilePictureUrl: {
-    type: String,
-    default: "",
-  },
-  active: {
-    type: Boolean,
-    default: false, // Default value for "active" attribute
-  },
-  role: {
-    type: String,
-    default: "default",
-  },
-});
+  { timestamps: true },
+);
 
 UserSchema.pre<IUser>("save", async function (next) {
   try {
