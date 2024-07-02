@@ -9,7 +9,9 @@ const verifyCallback: VerifyFunction = async (username, password, done) => {
 
     // Ensure identifier (email or username) and password are provided
     if (!username || !password) {
-      throwError("Identifier and password are required.");
+      return done(null, false, {
+        message: "Identifier and password are required.",
+      });
     }
 
     // Find the user by email or username
@@ -18,21 +20,25 @@ const verifyCallback: VerifyFunction = async (username, password, done) => {
     }).select("+password");
 
     if (!user) {
-      return throwError("Invalid email or username and password.");
+      return done(null, false, {
+        message: "Invalid email or username and password.",
+      });
     }
 
     // Verify password
     const isPasswordValid = await bcryptjs.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throwError("Invalid password.");
+      return done(null, false, {
+        message: "Invalid password.",
+      });
     }
 
     // Return the user if credentials are correct
     return done(null, user);
   } catch (error: Error | any) {
     console.log("Local login strategy error detected: " + error.message);
-    throwError(error);
+    return done(error);
   } finally {
     console.log("Local login strategy finished");
   }
