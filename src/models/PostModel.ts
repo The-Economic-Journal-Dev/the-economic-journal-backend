@@ -9,7 +9,34 @@ interface IPost {
   summary?: string;
   postBody: string;
   category: "Technology" | "Science" | "Health" | "Business" | "Other";
+  comments: IComment[];
+  likes: number;
 }
+
+// Interface for comments
+interface IComment {
+  userId: mongoose.Types.ObjectId;
+  content: string;
+  createdAt: Date;
+}
+
+
+const CommentSchema: Schema<IComment> = new Schema<IComment>({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User", // Reference to User model
+  },
+  content: {
+    type: String,
+    required: true,
+    maxlength: 500,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
 const PostSchema: Schema<IPost> = new Schema<IPost>({
   authorId: {
@@ -45,6 +72,11 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
     type: String,
     enum: ["Finance", "Economic", "Business", "Entrepreneurship"], // Add your desired categories
     required: true,
+  },
+  comments: [CommentSchema],
+  likes: {
+    type: Number,
+    default: 0,
   },
 });
 
