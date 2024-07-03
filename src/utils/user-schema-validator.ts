@@ -21,7 +21,7 @@ const validateRegister = (body: any) => {
     return {
       status: StatusCodes.BAD_REQUEST,
       success: false,
-      msg: `Validation errors: ${errorMessages}`,
+      message: `Validation errors: ${errorMessages}`,
     };
   }
 
@@ -31,7 +31,7 @@ const validateRegister = (body: any) => {
     return {
       status: StatusCodes.BAD_REQUEST,
       success: false,
-      msg: "Invalid UTF-8 characters in username or password",
+      message: "Invalid UTF-8 characters in username or password",
     };
   }
 
@@ -39,7 +39,7 @@ const validateRegister = (body: any) => {
   return {
     status: StatusCodes.OK,
     success: true,
-    msg: "Validation successful",
+    message: "Validation successful",
   };
 };
 

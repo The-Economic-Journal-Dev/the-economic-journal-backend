@@ -66,7 +66,7 @@ const createNewPost = [
     });
 
     if (!postValidationResult.success) {
-      throwError(postValidationResult.msg, postValidationResult.status);
+      throwError(postValidationResult.message, postValidationResult.status);
     }
 
     try {
@@ -82,7 +82,7 @@ const createNewPost = [
 
       res.status(201).json({
         success: true,
-        msg: "Post created successfully",
+        message: "Post created successfully",
         post: newPost,
       });
     } catch (error) {
@@ -113,7 +113,7 @@ const getPosts = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      msg: "Posts fetched successfully",
+      message: "Posts fetched successfully",
       posts,
     });
   } catch (error) {
@@ -136,7 +136,7 @@ const getSinglePost = async (req: Request, res: Response) => {
     // Return the post
     return res.status(200).json({
       success: true,
-      msg: "Post fetched successfully",
+      message: "Post fetched successfully",
       post,
     });
   } catch (error) {
@@ -225,7 +225,7 @@ const editPost = [
         });
 
         if (!postValidationResult.success) {
-          throwError(postValidationResult.msg, postValidationResult.status);
+          throwError(postValidationResult.message, postValidationResult.status);
         }
 
         if (imageUrl !== "") {
@@ -245,7 +245,7 @@ const editPost = [
 
       res.status(201).json({
         success: true,
-        msg: `Post with id: ${postId} edited successfully.`,
+        message: `Post with id: ${postId} edited successfully.`,
         post: post,
       });
     } catch (error) {
@@ -276,12 +276,15 @@ const deletePost = [
       if (!task) {
         return res
           .status(404)
-          .json({ success: false, msg: `No post with id: ${postId} found.` });
+          .json({
+            success: false,
+            message: `No post with id: ${postId} found.`,
+          });
       }
 
       return res.status(200).json({
         success: true,
-        msg: `Post with id: ${postId} deleted.`,
+        message: `Post with id: ${postId} deleted.`,
         post: null,
       });
     } catch (error) {

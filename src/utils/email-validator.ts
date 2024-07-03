@@ -16,7 +16,7 @@ const sendEmailToValidate = async (email: string) => {
     return {
       success: false,
       status: StatusCodes.BAD_REQUEST,
-      msg: "Email must contain exactly one '@' symbol",
+      message: "Email must contain exactly one '@' symbol",
     };
   }
 
@@ -28,7 +28,7 @@ const sendEmailToValidate = async (email: string) => {
     return {
       success: false,
       status: StatusCodes.BAD_REQUEST,
-      msg: "Email domain must contain at least one '.'",
+      message: "Email domain must contain at least one '.'",
     };
   }
 
@@ -42,14 +42,14 @@ const sendEmailToValidate = async (email: string) => {
         return {
           success: false,
           status: StatusCodes.BAD_REQUEST,
-          msg: "Email domain has no MX records",
+          message: "Email domain has no MX records",
         };
       }
     } catch (error) {
       return {
         success: false,
         status: StatusCodes.BAD_REQUEST,
-        msg: `DNS lookup failed: ${(error as Error).message}`,
+        message: `DNS lookup failed: ${(error as Error).message}`,
       };
     }
   }
@@ -80,7 +80,7 @@ const sendEmailToValidate = async (email: string) => {
     return {
       success: true,
       status: 200,
-      msg: `Message sent: ${info.messageId}`,
+      message: `Message sent: ${info.messageId}`,
       verificationToken,
       verificationCode,
     };
@@ -88,7 +88,7 @@ const sendEmailToValidate = async (email: string) => {
     return {
       success: false,
       status: StatusCodes.INTERNAL_SERVER_ERROR,
-      msg: `Failed to send verification email: ${(error as Error).message}`,
+      message: `Failed to send verification email: ${(error as Error).message}`,
     };
   }
 };

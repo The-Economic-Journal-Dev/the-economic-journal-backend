@@ -21,19 +21,20 @@ router
     (req: Request, res: Response) => {
       res
         .status(StatusCodes.OK)
-        .json({ success: true, msg: "Register successful" });
+        .json({ success: true, message: "Register successful" });
     },
   );
 router
   .route("/login/:method")
   .post(
+    upload.none(),
     LoginAuthenticationFactory,
     regenerateSession,
     authGuard,
     (req: Request, res: Response) => {
       res
         .status(StatusCodes.OK)
-        .json({ success: true, msg: "Login successful" });
+        .json({ success: true, message: "Login successful" });
     },
   );
 router.route("/logout").delete(authGuard, logout);
@@ -44,7 +45,7 @@ router.route("/changepassword").post(changeUserPassword);
 router.route("/check-session").get(authGuard, (req: Request, res: Response) => {
   res.json({
     success: true,
-    msg: "User authenticated with a session",
+    message: "User authenticated with a session",
     user: req.user,
   });
 });

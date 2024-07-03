@@ -13,7 +13,7 @@ const validatePost = (body: any) => {
     return {
       status: StatusCodes.BAD_REQUEST,
       success: false,
-      msg: `Validation errors: ${errorMessages}`,
+      message: `Validation errors: ${errorMessages}`,
     };
   }
 
@@ -21,7 +21,7 @@ const validatePost = (body: any) => {
   return {
     status: StatusCodes.OK,
     success: true,
-    msg: "Validation successful",
+    message: "Validation successful",
   };
 };
 
