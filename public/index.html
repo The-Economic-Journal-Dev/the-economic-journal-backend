@@ -45,9 +45,9 @@
             }).then(response => {
                 const data = response.data
                 if (data.success) {
-                    alert('Registration successful: ' + data.msg);
+                    alert('Registration successful: ' + data.message);
                 } else {
-                    alert('Registration failed: ' + data.msg);
+                    alert('Registration failed: ' + data.message);
                 }
             }).catch(error => {
                 console.log(error);
@@ -68,9 +68,9 @@
         //         const data = response.data
         //         console.log(response)
         //         if (data.success) {
-        //             alert('Login successful: ' + data.msg);
+        //             alert('Login successful: ' + data.message);
         //         } else {
-        //             alert('Login failed: ' + data.error.msg);
+        //             alert('Login failed: ' + data.error.message);
         //         }
         //     }).catch(error => {
         //         console.log(error);

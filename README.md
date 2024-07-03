@@ -79,7 +79,7 @@ fetch("/something")
 ```json
 {
   "success": true,
-  "msg": "Register successful"
+  "message": "Register successful"
 }
 ```
 
@@ -110,7 +110,7 @@ add an `?=` after the URL lie this: `/auth/verify?token={INSERT TOKEN HERE}`
 ```json
 {
   "success": true,
-  "msg": "Email validation successful"
+  "message": "Email validation successful"
 }
 ```
 
@@ -143,7 +143,7 @@ add an `?=` after the URL lie this: `/auth/verify?token={INSERT TOKEN HERE}`
 ```json
 {
   "success": true,
-  "msg": "Login successful"
+  "message": "Login successful"
 }
 ```
 
@@ -185,7 +185,7 @@ add an `?=` after the URL lie this: `/auth/verify?token={INSERT TOKEN HERE}`
 ```json
 {
   "success": true,
-  "msg": "Logout successful"
+  "message": "Logout successful"
 }
 ```
 
@@ -305,7 +305,7 @@ Creates a new post with specified details and optionally uploads an image.
 ```json
 {
   "success": true,
-  "msg": "Post created successfully",
+  "message": "Post created successfully",
   "post": { ... } // Details of the created post
 }
 ```
@@ -337,7 +337,7 @@ Retrieves a list of posts with optional pagination and content inclusion.
 ```json
 {
   "success": true,
-  "msg": "Posts fetched successfully",
+  "message": "Posts fetched successfully",
   "posts": [ ... ] // Array of posts
 }
 ```
@@ -373,7 +373,7 @@ Retrieves details of a single post by its ID.
 ```json
 {
   "success": true,
-  "msg": "Post fetched successfully",
+  "message": "Post fetched successfully",
   "post": { ... } // Details of the fetched post
 }
 ```
@@ -413,7 +413,7 @@ Updates details of an existing post identified by its ID.
 ```json
 {
   "success": true,
-  "msg": "Post with id: {postId} edited successfully.",
+  "message": "Post with id: {postId} edited successfully.",
   "post": { ... } // Details of the edited post
 }
 ```
@@ -453,7 +453,7 @@ Deletes an existing post identified by its ID.
 ```json
 {
   "success": true,
-  "msg": "Post deleted successfully"
+  "message": "Post deleted successfully"
 }
 ```
 
@@ -526,7 +526,7 @@ Delete an existing user identified by their ID.
 ```json
 {
   "success": true,
-  "msg": "Profile deleted successfully"
+  "message": "Profile deleted successfully"
 }
 ```
 
@@ -551,7 +551,7 @@ Get an existing user's profile identified by their ID.
 ```json
 {
   "success": true,
-  "msg": "Profile retrieved successfully"
+  "message": "Profile retrieved successfully"
 }
 ```
 

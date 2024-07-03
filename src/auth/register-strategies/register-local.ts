@@ -32,7 +32,7 @@ const localRegisterMethod = async (
   });
 
   if (!schemaValidationResult.success) {
-    throwError(schemaValidationResult.msg, schemaValidationResult.status);
+    throwError(schemaValidationResult.message, schemaValidationResult.status);
   }
 
   try {
@@ -53,7 +53,7 @@ const localRegisterMethod = async (
     const emailValidationResult = await sendEmailToValidate(email);
 
     if (!emailValidationResult.success) {
-      throwError(emailValidationResult.msg, emailValidationResult.status);
+      throwError(emailValidationResult.message, emailValidationResult.status);
     }
 
     const session = await UserModel.startSession();
