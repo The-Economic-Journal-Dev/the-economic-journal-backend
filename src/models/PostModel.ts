@@ -43,7 +43,7 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
   },
   category: {
     type: String,
-    enum: ["Technology", "Science", "Health", "Business", "Other"], // Add your desired categories
+    enum: ["Finance", "Economic", "Business", "Entrepreneurship"], // Add your desired categories
     required: true,
   },
 });
