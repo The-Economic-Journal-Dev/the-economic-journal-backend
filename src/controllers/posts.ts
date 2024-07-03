@@ -290,4 +290,29 @@ const deletePost = [
   },
 ];
 
+const commentOnPost = (req: Request, res: Response) => {
+
+}
+
+const likePost = async (req: Request, res: Response) => {
+  const postId = req.params.postId;
+      const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+
+      if (!userId) {
+        throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+      }
+
+      const post = await PostModel.findById(postId);
+
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      // Increment the likes count
+      post.likes += 1;
+      await post.save();
+
+      res.status(200).json({ message: "Post liked successfully", likes: post.likes }); 
+    }
+
 export { createNewPost, getPosts, getSinglePost, editPost, deletePost };
