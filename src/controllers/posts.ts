@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import { PostModel, IPost } from "../models/PostModel";
+import { PostModel, IPost, IComment } from "../models/PostModel";
 import { validatePost } from "../utils/post-validator";
 import uploadFileToS3 from "../utils/upload-file-to-s3";
 import { StatusCodes } from "http-status-codes";
 import upload from "../config/multer-config";
 import authGuard from "../middleware/auth-guard";
+import mongoose from "mongoose";
+import { strict } from "assert";
 
 // Define the types for files
 interface MulterFiles {
@@ -274,12 +276,10 @@ const deletePost = [
       const task = await PostModel.findOneAndDelete({ _id: postId });
 
       if (!task) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message: `No post with id: ${postId} found.`,
-          });
+        return res.status(404).json({
+          success: false,
+          message: `No post with id: ${postId} found.`,
+        });
       }
 
       return res.status(200).json({
@@ -293,29 +293,79 @@ const deletePost = [
   },
 ];
 
-const commentOnPost = (req: Request, res: Response) => {
-
-}
-
-const likePost = async (req: Request, res: Response) => {
-  const postId = req.params.postId;
-      const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+const commentOnPost = [
+  authGuard,
+  async (req: Request, res: Response) => {
+    try {
+      const postId = req.params.postId;
+      const { content } = req.body;
+      const userId = (req.user as any)._id;
 
       if (!userId) {
-        throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+        return throwError(
+          "User might not be logged in",
+          StatusCodes.BAD_REQUEST,
+        );
+      }
+
+      if (!content) {
+        return throwError(
+          "Comment content is required",
+          StatusCodes.BAD_REQUEST,
+        );
       }
 
       const post = await PostModel.findById(postId);
 
       if (!post) {
-        return res.status(404).json({ message: "Post not found" });
+        return throwError("Post not found", StatusCodes.NOT_FOUND);
       }
 
-      // Increment the likes count
-      post.likes += 1;
+      const newComment: IComment = {
+        userId: userId,
+        content,
+        createdAt: new Date(),
+      };
+
+      post.comments.push(newComment);
       await post.save();
 
-      res.status(200).json({ message: "Post liked successfully", likes: post.likes }); 
+      res.status(201).json({
+        success: true,
+        message: "Comment added successfully",
+        comment: newComment,
+      });
+    } catch (error) {
+      throwError(error as Error);
     }
+  },
+];
+
+const likePost = async (req: Request, res: Response) => {
+  const postId = req.params.postId;
+  const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+
+  if (!userId) {
+    throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+  }
+
+  const post = await PostModel.findById(postId);
+
+  if (!post) {
+    return throwError("Post not found", StatusCodes.NOT_FOUND);
+  }
+
+  // Increment the likes count
+  post.likes += 1;
+  await post.save();
+
+  res
+    .status(200)
+    .json({
+      success: true,
+      message: "Post liked successfully",
+      likes: post.likes,
+    });
+};
 
 export { createNewPost, getPosts, getSinglePost, editPost, deletePost };

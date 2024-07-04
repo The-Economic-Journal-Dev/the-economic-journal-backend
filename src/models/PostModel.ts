@@ -20,10 +20,9 @@ interface IComment {
   createdAt: Date;
 }
 
-
 const CommentSchema: Schema<IComment> = new Schema<IComment>({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Types.ObjectId,
     required: true,
     ref: "User", // Reference to User model
   },
@@ -73,7 +72,7 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
     enum: ["Finance", "Economic", "Business", "Entrepreneurship"], // Add your desired categories
     required: true,
   },
-  comments: [CommentSchema],
+  comments: { type: [CommentSchema], select: false },
   likes: {
     type: Number,
     default: 0,
@@ -84,4 +83,4 @@ PostSchema.index({ category: 1, datePublished: -1 });
 
 const PostModel: Model<IPost> = mongoose.model<IPost>("Post", PostSchema);
 
-export { PostModel, IPost };
+export { PostModel, IPost, IComment };
