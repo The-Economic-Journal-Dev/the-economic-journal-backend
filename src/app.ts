@@ -15,7 +15,6 @@ import passport from "passport";
 
 import authRoutes from "./routes/authRoutes"; // Import authorization routes
 import mainRoutes from "./routes/mainRoutes"; // Import the main routes serving the HTML
-import serveStatic from "serve-static";
 import helmet from "helmet";
 import cors from "cors";
 
@@ -40,9 +39,6 @@ app.use(
 // Middlewares to parse requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Middleware to serve static files from the 'public' directory
-app.use(serveStatic("./public"));
 
 // Connect to mongo db
 connectToDB(process.env.MONGO_URI!);
