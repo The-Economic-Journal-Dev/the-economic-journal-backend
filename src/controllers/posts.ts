@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
-import { PostModel, IPost, IComment } from "../models/PostModel";
+import { PostModel, IPost } from "../models/PostModel";
 import { validatePost } from "../utils/post-validator";
-import uploadFileToS3 from "../utils/upload-file-to-s3";
+import {
+  uploadFileToS3,
+  deleteFileFromS3,
+} from "../services/aws/s3-file-manager";
 import { StatusCodes } from "http-status-codes";
-import upload from "../config/multer-config";
 import authGuard from "../middleware/auth-guard";
-import mongoose from "mongoose";
-import { strict } from "assert";
+import upload from "../config/multer-config";
 
 // Define the types for files
 interface MulterFiles {
@@ -71,79 +72,81 @@ const createNewPost = [
       throwError(postValidationResult.message, postValidationResult.status);
     }
 
-    try {
-      const newPost = new PostModel({
-        authorId,
-        title,
-        imageUrl,
-        summary,
-        postBody,
-      });
+    const newPost = new PostModel({
+      authorId,
+      title,
+      imageUrl,
+      summary,
+      postBody,
+    });
 
-      await newPost.save();
+    await newPost.save();
 
-      res.status(201).json({
-        success: true,
-        message: "Post created successfully",
-        post: newPost,
-      });
-    } catch (error) {
-      throwError(error as Error);
-    }
+    res.status(201).json({
+      success: true,
+      message: "Post created successfully",
+      post: newPost,
+    });
   },
 ];
 
+// TODO: change the includeComments to use document.populate() for getting the comments instead
 const getPosts = async (req: Request, res: Response) => {
-  try {
-    const options = req.body;
-    const { pageNumber = 1, count = 20, includeBody = false } = options;
+  const options = req.body;
+  const {
+    pageNumber = 1,
+    count = 20,
+    includeBody = false,
+    includeComments = false,
+  } = options;
 
-    // Calculate how many documents to skip
-    const skipCount = (pageNumber - 1) * count;
+  // Calculate how many documents to skip
+  const skipCount = (pageNumber - 1) * count;
 
-    let query = PostModel.find()
-      .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
-      .skip(skipCount) // Skip documents to implement pagination
-      .limit(count); // Limit the number of documents returned per page;
+  let query = PostModel.find()
+    .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
+    .skip(skipCount) // Skip documents to implement pagination
+    .limit(count); // Limit the number of documents returned per page;
 
-    // Optionally select postBody field based on includeBody flag
-    if (includeBody) {
-      query = query.select("postBody");
-    }
-
-    const posts: IPost[] = await query.exec();
-
-    res.json({
-      success: true,
-      message: "Posts fetched successfully",
-      posts,
-    });
-  } catch (error) {
-    throwError(error as Error);
+  // Optionally select postBody field based on includeBody flag
+  if (includeBody) {
+    query = query.select("postBody");
   }
+
+  if (includeComments) {
+    query = query.select("comments").populate({
+      path: "comments.userId",
+      select: "username -_id", // Select only the username field and exclude _id
+      model: "User", // Assuming your User model is named 'User'
+    });
+  }
+
+  const posts: IPost[] = await query.exec();
+
+  res.json({
+    success: true,
+    message: "Posts fetched successfully",
+    posts,
+  });
 };
 
 const getSinglePost = async (req: Request, res: Response) => {
   const { id: postId } = req.params;
 
-  try {
-    // Find the post by id
-    const post = await PostModel.findById(postId);
+  // Find the post by id
+  const post = await PostModel.findById(postId);
 
-    // Check if the post exists
-    if (!post) {
-      throwError("Post not found", 404);
-    }
-
-    // Return the post
-    return res.status(200).json({
-      success: true,
-      message: "Post fetched successfully",
-      post,
-    });
-  } catch (error) {
-    throwError(error as Error);
+  // Check if the post exists
+  if (!post) {
+    throwError("Post not found", 404);
   }
+
+  // Return the post
+  return res.status(200).json({
+    success: true,
+    message: "Post fetched successfully",
+    post,
+  });
 };
 
 /**
@@ -256,7 +259,6 @@ const editPost = [
   },
 ];
 
-// TODO: Only flag the post as deleted and remove it from the db after a week
 const deletePost = [
   async (req: Request, res: Response) => {
     try {
@@ -276,10 +278,21 @@ const deletePost = [
       const task = await PostModel.findOneAndDelete({ _id: postId });
 
       if (!task) {
-        return res.status(404).json({
-          success: false,
-          message: `No post with id: ${postId} found.`,
-        });
+        throwError(`No post with id: ${postId} found.`, StatusCodes.NOT_FOUND);
+      }
+
+      // Delete the image associated with the post from the S3 bucket
+      const url = task.imageUrl;
+      if (url) {
+        const key = extractImageName(url);
+        if (key) {
+          await deleteFileFromS3(key);
+        } else {
+          throwError(
+            "Invalid CloudFront URL or image key",
+            StatusCodes.INTERNAL_SERVER_ERROR,
+          );
+        }
       }
 
       return res.status(200).json({
@@ -293,79 +306,70 @@ const deletePost = [
   },
 ];
 
-const commentOnPost = [
+const likePost = [
   authGuard,
   async (req: Request, res: Response) => {
-    try {
-      const postId = req.params.postId;
-      const { content } = req.body;
-      const userId = (req.user as any)._id;
+    const postId = req.params.postId;
+    const userId = (req.user as any)._id; // Assuming you have user authentication middleware
 
-      if (!userId) {
-        return throwError(
-          "User might not be logged in",
-          StatusCodes.BAD_REQUEST,
-        );
-      }
-
-      if (!content) {
-        return throwError(
-          "Comment content is required",
-          StatusCodes.BAD_REQUEST,
-        );
-      }
-
-      const post = await PostModel.findById(postId);
-
-      if (!post) {
-        return throwError("Post not found", StatusCodes.NOT_FOUND);
-      }
-
-      const newComment: IComment = {
-        userId: userId,
-        content,
-        createdAt: new Date(),
-      };
-
-      post.comments.push(newComment);
-      await post.save();
-
-      res.status(201).json({
-        success: true,
-        message: "Comment added successfully",
-        comment: newComment,
-      });
-    } catch (error) {
-      throwError(error as Error);
+    if (!userId) {
+      throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
     }
+
+    const post = await PostModel.findById(postId);
+    if (!post) {
+      return throwError("Post not found", StatusCodes.NOT_FOUND);
+    }
+
+    // Check if the user has already liked the post
+    if (post.likedBy.includes(userId)) {
+      throwError("You have already liked this post", StatusCodes.BAD_REQUEST);
+    }
+
+    // Add the user to the likedBy array
+    post.likedBy.push(userId);
+
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Post liked successfully",
+      likes: post.likesCount,
+    });
   },
 ];
 
-const likePost = async (req: Request, res: Response) => {
-  const postId = req.params.postId;
-  const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+const unlikePost = [
+  authGuard,
+  async (req: Request, res: Response) => {
+    const postId = req.params.postId;
+    const userId = (req.user as any)._id; // Assuming you have user authentication middleware
 
-  if (!userId) {
-    throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
-  }
+    if (!userId) {
+      throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+    }
 
-  const post = await PostModel.findById(postId);
+    const post = await PostModel.findById(postId);
+    if (!post) {
+      return throwError("Post not found", StatusCodes.NOT_FOUND);
+    }
 
-  if (!post) {
-    return throwError("Post not found", StatusCodes.NOT_FOUND);
-  }
+    // Check if the user has already liked the post
+    if (!post.likedBy.includes(userId)) {
+      throwError("You have not liked the post", StatusCodes.BAD_REQUEST);
+    }
 
-  // Increment the likes count
-  post.likes += 1;
-  await post.save();
+    // Remove the user from the likedBy array
+    post.likedBy.pull({ _id: userId });
 
-  res
-    .status(200)
-    .json({
+    await post.save();
+
+    res.status(200).json({
       success: true,
-      message: "Post liked successfully",
-      likes: post.likes,
+      message: "Post unliked successfully",
+      likes: post.likesCount,
     });
-};
+  },
+];
 
 export { createNewPost, getPosts, getSinglePost, editPost, deletePost };

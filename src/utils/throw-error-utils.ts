@@ -1,11 +1,10 @@
 import { HttpError } from "../errors/custom-errors";
 
-const throwError = function (
+const throwErrorImpl = function (
   messageOrError: string | Error,
   statusCode?: number,
-) {
+): never {
   let error: HttpError;
-
   if (messageOrError instanceof Error) {
     error = messageOrError as HttpError;
     if (statusCode) {
@@ -16,7 +15,6 @@ const throwError = function (
     error = new HttpError(message, statusCode || 500);
     error.status = statusCode || 500;
   }
-
   throw error;
 };
 
@@ -28,7 +26,10 @@ declare global {
    * @param {number} [statusCode] - Optional HTTP status code.
    * @throws {HttpError} - Throws an HttpError with the specified message and status code.
    */
-  function throwError(message: string | Error, statusCode?: number): void;
+  function throwError(
+    messageOrError: string | Error,
+    statusCode?: number,
+  ): never;
 }
 
-(global as any).throwError = throwError;
+(global as any).throwError = throwErrorImpl;

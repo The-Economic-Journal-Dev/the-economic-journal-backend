@@ -9,10 +9,10 @@ const authGuard = (req: Request, res: Response, next: NextFunction) => {
     return next();
   } else {
     // User is not authenticated, respond with 401 Unauthorized
-    res.status(StatusCodes.UNAUTHORIZED).json({
-      success: false,
-      message: "Unauthorized: Authentication required to access this route",
-    });
+    throwError(
+      "Unauthorized: Authentication required to access this route",
+      StatusCodes.UNAUTHORIZED,
+    );
   }
 };
 

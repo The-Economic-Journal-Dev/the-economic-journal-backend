@@ -15,6 +15,7 @@ import passport from "passport";
 
 import authRoutes from "./routes/authRoutes"; // Import authorization routes
 import mainRoutes from "./routes/mainRoutes"; // Import the main routes serving the HTML
+import apiRoutes from "./routes/apiRoutes"; // Import the main routes serving the HTML
 import helmet from "helmet";
 import cors from "cors";
 
@@ -72,6 +73,7 @@ import "./config/register-config";
 // Routes
 app.use(mainRoutes);
 app.use("/auth", authRoutes);
+app.use("/api", apiRoutes);
 
 app.use(errorHandler);
 

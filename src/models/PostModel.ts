@@ -1,47 +1,24 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
+import { CommentModel, IComment } from "./CommentModel";
 
 // TypeScript interface to define the schema fields for Post
-interface IPost {
-  authorId: mongoose.Types.ObjectId;
+interface IPost extends Document {
+  authorId: Schema.Types.ObjectId;
   title: string;
   datePublished: Date;
   imageUrl?: string;
   summary?: string;
   postBody: string;
   category: "Technology" | "Science" | "Health" | "Business" | "Other";
-  comments: IComment[];
-  likes: number;
+  likedBy: Types.Array<Types.ObjectId>;
+  likesCount: number;
 }
-
-// Interface for comments
-interface IComment {
-  userId: mongoose.Types.ObjectId;
-  content: string;
-  createdAt: Date;
-}
-
-const CommentSchema: Schema<IComment> = new Schema<IComment>({
-  userId: {
-    type: mongoose.Types.ObjectId,
-    required: true,
-    ref: "User", // Reference to User model
-  },
-  content: {
-    type: String,
-    required: true,
-    maxlength: 500,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
 
 const PostSchema: Schema<IPost> = new Schema<IPost>({
   authorId: {
-    type: mongoose.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     required: true,
-    ref: "User", // Reference to User model
+    ref: "Users", // Reference to User model
   },
   title: {
     type: String,
@@ -72,8 +49,12 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
     enum: ["Finance", "Economic", "Business", "Entrepreneurship"], // Add your desired categories
     required: true,
   },
-  comments: { type: [CommentSchema], select: false },
-  likes: {
+  likedBy: {
+    type: [{ type: Schema.Types.ObjectId, ref: "Users" }],
+    default: [],
+    select: false, // Do not include this field in the response by default
+  },
+  likesCount: {
     type: Number,
     default: 0,
   },
@@ -81,6 +62,24 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
 
 PostSchema.index({ category: 1, datePublished: -1 });
 
-const PostModel: Model<IPost> = mongoose.model<IPost>("Post", PostSchema);
+// Pre-save hook to update likesCount
+PostSchema.pre("save", async function (next) {
+  if (this.isModified("likedBy")) {
+    this.likesCount = this.likedBy.length;
+  }
+  next();
+});
+
+PostSchema.pre<IComment>("remove", async function (next) {
+  try {
+    // Delete all child comments
+    await PostModel.deleteMany({ postId: this._id });
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
+
+const PostModel: Model<IPost> = mongoose.model<IPost>("Posts", PostSchema);
 
 export { PostModel, IPost, IComment };

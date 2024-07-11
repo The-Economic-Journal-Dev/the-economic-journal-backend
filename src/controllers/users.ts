@@ -7,7 +7,7 @@ import { StatusCodes } from "http-status-codes";
 import { UserModel, IUser } from "../models/UserModel";
 import bcryptjs from "bcryptjs";
 import upload from "../config/multer-config";
-import uploadFileToS3 from "../utils/upload-file-to-s3";
+import { uploadFileToS3 } from "../services/aws/s3-file-manager";
 import authGuard from "../middleware/auth-guard";
 
 /**
@@ -166,13 +166,6 @@ const deleteUser = [
     const user: IUser | null =
       await UserModel.findById(userId).select("+password");
 
-    if (!user) {
-      throwError(
-        `User ${(req.user as any).username} is not authorised for this action.`,
-        StatusCodes.UNAUTHORIZED,
-      );
-    }
-
     // Verify password
     const isPasswordValid = await bcryptjs.compare(password, user!.password);
 
@@ -182,6 +175,12 @@ const deleteUser = [
 
     // Delete the user
     await user!.remove();
+
+    res.json({
+      success: true,
+      message: "User deleted successfully!",
+      user: null,
+    });
   },
 ];
 
@@ -237,6 +236,11 @@ const changeUserPassword = async (req: Request, res: Response) => {
 
   // Save the updated user
   await user!.save();
+
+  res.json({
+    success: true,
+    message: "Password changed successfully",
+  });
 };
 
 export {

@@ -43,6 +43,7 @@ fetch("/something")
    5. [Get Single Post](#get-single-post)
    6. [Edit Post](#edit-post)
    7. [Delete Post](#edit-post)
+   8. [Create New Comment](#create-new-comment)
 3. [User Profile Endpoints](#user-profile-endpoints)
 4. [Errors](#errors)
 
@@ -434,10 +435,6 @@ Deletes an existing post identified by its ID.
 
 `id (string): ID of the post to delete.`
 
-### Request File(s):
-
-`image (file): Optional updated image file to upload.`
-
 ### Request:
 
 ```json
@@ -454,6 +451,63 @@ Deletes an existing post identified by its ID.
 {
   "success": true,
   "message": "Post deleted successfully"
+}
+```
+
+## Create New Comment
+
+### URL:
+
+`/api/post/:id/comment`
+
+### Method:
+
+`POST`
+
+### Request:
+
+```json
+{
+  "content": "body of the comment", // (string): The text content of the comment
+  "targetId": "exampleID" // (string): The id of the target comment to create a comment for. Leave blank or dont provide a target if commenting on a post
+}
+```
+
+### Response:
+
+```json
+{
+  "success": true,
+  "message": "Comment added successfully",
+  "comment": newComment, // The new comment object that was created
+}
+```
+
+## Delete Comment
+
+### URL:
+
+`/api/post/:id/comment`
+
+### Method:
+
+`DELETE`
+
+### Request:
+
+```json
+{
+  "targetId": "exampleID" // (string): The id of the target comment to delete
+}
+```
+
+### Response:
+
+```json
+{
+  "success": true,
+  "message": "Comment delete successfully",
+  "comment": null
 }
 ```
 

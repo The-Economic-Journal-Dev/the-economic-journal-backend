@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Model } from "mongoose";
 
 // TypeScript interface to define the schema fields
 interface IEmailVerificationToken extends Document {
-  userId: mongoose.Types.ObjectId;
+  userId: Schema.Types.ObjectId;
   token: string;
   code: string;
   createdAt: Date;
@@ -11,9 +11,9 @@ interface IEmailVerificationToken extends Document {
 const EmailVerificationTokenSchema: Schema<IEmailVerificationToken> =
   new Schema<IEmailVerificationToken>({
     userId: {
-      type: mongoose.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
-      ref: "User", // Reference to User model
+      ref: "Users", // Reference to User model
     },
     token: {
       type: String,
@@ -35,7 +35,7 @@ const EmailVerificationTokenSchema: Schema<IEmailVerificationToken> =
 
 const EmailVerificationTokenModel: Model<IEmailVerificationToken> =
   mongoose.model<IEmailVerificationToken>(
-    "EmailVerificationToken",
+    "EmailVerificationTokens",
     EmailVerificationTokenSchema,
   );
 
