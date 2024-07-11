@@ -32,6 +32,7 @@ const sendEmailToValidate = async (email: string) => {
     };
   }
 
+  // TODO: DONT FUCKING USE NODE CACHE THAT HSIT LEAKS MEMORY AND I DONT EVEN KNOW WHAT THAT MEANS!!!!!11!
   // Check the cache first
   const cachedRecords = dnsCache.get(domain);
   if (!cachedRecords) {
