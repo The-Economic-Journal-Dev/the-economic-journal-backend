@@ -19,6 +19,23 @@ import apiRoutes from "./routes/apiRoutes"; // Import the main routes serving th
 import helmet from "helmet";
 import cors from "cors";
 
+import pino from "pino";
+
+const transport = pino.transport({
+  target: "@serdnam/pino-cloudwatch-transport",
+  options: {
+    logGroupName: "pino-cloudwatch-test",
+    logStreamName: "pino-cloudwatch-test-stream",
+    awsRegion: process.env.AWS_REGION,
+    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    interval: 1_000, // this is the default
+  },
+});
+
+const logger = pino(transport);
+logger.info("Hello, CloudWatch Logs!");
+
 // Use Helmet!
 app.use(helmet());
 app.use(cors());
