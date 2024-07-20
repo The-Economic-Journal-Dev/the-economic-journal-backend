@@ -1,6 +1,8 @@
 import "dotenv/config"; // Import and configure dotenv to load environment variables
 import "express-async-errors"; // Import express-async-errors for better error handling
 import "./utils/throw-error-utils";
+import "./config/logger-config";
+
 import errorHandler from "./middleware/error-handler";
 import compression from "compression"; // Import compression for compressing responses
 
@@ -13,28 +15,10 @@ import { sessionStorage } from "./db/connect"; // Import the session storage con
 
 import passport from "passport";
 
-import authRoutes from "./routes/authRoutes"; // Import authorization routes
 import mainRoutes from "./routes/mainRoutes"; // Import the main routes serving the HTML
 import apiRoutes from "./routes/apiRoutes"; // Import the main routes serving the HTML
 import helmet from "helmet";
 import cors from "cors";
-
-import pino from "pino";
-
-const transport = pino.transport({
-  target: "@serdnam/pino-cloudwatch-transport",
-  options: {
-    logGroupName: "pino-cloudwatch-test",
-    logStreamName: "pino-cloudwatch-test-stream",
-    awsRegion: process.env.AWS_REGION,
-    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    interval: 1_000, // this is the default
-  },
-});
-
-const logger = pino(transport);
-logger.info("Hello, CloudWatch Logs!");
 
 // Use Helmet!
 app.use(helmet());
@@ -89,7 +73,6 @@ import "./config/register-config";
 
 // Routes
 app.use(mainRoutes);
-app.use("/auth", authRoutes);
 app.use("/api", apiRoutes);
 
 app.use(errorHandler);

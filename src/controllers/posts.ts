@@ -6,8 +6,9 @@ import {
   deleteFileFromS3,
 } from "../services/aws/s3-file-manager";
 import { StatusCodes } from "http-status-codes";
-import authGuard from "../middleware/auth-guard";
 import upload from "../config/multer-config";
+import axios from "axios";
+import { verifyRole } from "../auth/authenticate-firebase-cred";
 
 // Define the types for files
 interface MulterFiles {
@@ -25,7 +26,7 @@ function isAcceptedMimetype(mimetype: string): boolean {
 }
 
 const createNewPost = [
-  authGuard,
+  verifyRole(["admin", "writer"]),
   upload.fields([
     {
       name: "image",
@@ -37,16 +38,6 @@ const createNewPost = [
 
     const files = req.files as MulterFiles;
 
-    if (
-      !req.user ||
-      (req.user as any).role !== "admin" ||
-      (req.user as any).role !== "writer"
-    ) {
-      return throwError(
-        "User not logged in or without the valid permission",
-        StatusCodes.UNAUTHORIZED,
-      );
-    }
     const authorId = (req.user as any)._id; // req.user as any because the fucking type declaration won't work
 
     let imageUrl = "";
@@ -170,7 +161,7 @@ function extractImageName(url?: string): string | undefined {
 }
 
 const editPost = [
-  authGuard,
+  verifyRole(["writer", "admin"]),
   upload.fields([
     {
       name: "image",
@@ -183,16 +174,6 @@ const editPost = [
 
     const files = req.files as MulterFiles;
 
-    if (
-      !req.user ||
-      (req.user as any).role !== "admin" ||
-      (req.user as any).role !== "writer"
-    ) {
-      return throwError(
-        "User not logged in or without the valid permission",
-        StatusCodes.UNAUTHORIZED,
-      );
-    }
     const editorId = (req.user as any)._id; // req.user as any because the fucking type declaration won't work
 
     if (!editorId) {
@@ -205,6 +186,8 @@ const editPost = [
 
       // Check if the post exists
       if (post) {
+        purgeCloudflarePostsCache(post._id);
+
         let imageUrl = "";
         if ((req.files as MulterFiles)["image"]) {
           const image = files["image"][0];
@@ -260,29 +243,19 @@ const editPost = [
 ];
 
 const deletePost = [
+  verifyRole(["writer", "admin"]),
   async (req: Request, res: Response) => {
     try {
       const { id: postId } = req.params;
 
-      if (
-        !req.user ||
-        (req.user as any).role !== "admin" ||
-        (req.user as any).role !== "writer"
-      ) {
-        return throwError(
-          "User not logged in or without the valid permission",
-          StatusCodes.UNAUTHORIZED,
-        );
-      }
+      const post = await PostModel.findOneAndDelete({ _id: postId });
 
-      const task = await PostModel.findOneAndDelete({ _id: postId });
-
-      if (!task) {
+      if (!post) {
         throwError(`No post with id: ${postId} found.`, StatusCodes.NOT_FOUND);
       }
 
       // Delete the image associated with the post from the S3 bucket
-      const url = task.imageUrl;
+      const url = post.imageUrl;
       if (url) {
         const key = extractImageName(url);
         if (key) {
@@ -295,6 +268,8 @@ const deletePost = [
         }
       }
 
+      purgeCloudflarePostsCache(post._id);
+
       return res.status(200).json({
         success: true,
         message: `Post with id: ${postId} deleted.`,
@@ -306,70 +281,117 @@ const deletePost = [
   },
 ];
 
-const likePost = [
-  authGuard,
-  async (req: Request, res: Response) => {
-    const postId = req.params.postId;
-    const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+const likePost = async (req: Request, res: Response) => {
+  const postId = req.params.postId;
+  const userId = (req.user as any)._id; // Assuming you have user authentication middleware
 
-    if (!userId) {
-      throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
-    }
+  if (!userId) {
+    throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+  }
 
-    const post = await PostModel.findById(postId);
-    if (!post) {
-      return throwError("Post not found", StatusCodes.NOT_FOUND);
-    }
+  const post = await PostModel.findById(postId);
+  if (!post) {
+    return throwError("Post not found", StatusCodes.NOT_FOUND);
+  }
 
-    // Check if the user has already liked the post
-    if (post.likedBy.includes(userId)) {
-      throwError("You have already liked this post", StatusCodes.BAD_REQUEST);
-    }
+  // Check if the user has already liked the post
+  if (post.likedBy.includes(userId)) {
+    throwError("You have already liked this post", StatusCodes.BAD_REQUEST);
+  }
 
-    // Add the user to the likedBy array
-    post.likedBy.push(userId);
+  // Add the user to the likedBy array
+  post.likedBy.push(userId);
 
-    await post.save();
+  await post.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Post liked successfully",
-      likes: post.likesCount,
-    });
-  },
-];
+  res.status(200).json({
+    success: true,
+    message: "Post liked successfully",
+    likes: post.likesCount,
+  });
+};
 
-const unlikePost = [
-  authGuard,
-  async (req: Request, res: Response) => {
-    const postId = req.params.postId;
-    const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+const unlikePost = async (req: Request, res: Response) => {
+  const postId = req.params.postId;
+  const userId = (req.user as any)._id; // Assuming you have user authentication middleware
 
-    if (!userId) {
-      throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
-    }
+  if (!userId) {
+    throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+  }
 
-    const post = await PostModel.findById(postId);
-    if (!post) {
-      return throwError("Post not found", StatusCodes.NOT_FOUND);
-    }
+  const post = await PostModel.findById(postId);
+  if (!post) {
+    return throwError("Post not found", StatusCodes.NOT_FOUND);
+  }
 
-    // Check if the user has already liked the post
-    if (!post.likedBy.includes(userId)) {
-      throwError("You have not liked the post", StatusCodes.BAD_REQUEST);
-    }
+  // Check if the user has already liked the post
+  if (!post.likedBy.includes(userId)) {
+    throwError("You have not liked the post", StatusCodes.BAD_REQUEST);
+  }
 
-    // Remove the user from the likedBy array
-    post.likedBy.pull({ _id: userId });
+  // Remove the user from the likedBy array
+  post.likedBy.pull({ _id: userId });
 
-    await post.save();
+  await post.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Post unliked successfully",
-      likes: post.likesCount,
-    });
-  },
-];
+  res.status(200).json({
+    success: true,
+    message: "Post unliked successfully",
+    likes: post.likesCount,
+  });
+};
 
-export { createNewPost, getPosts, getSinglePost, editPost, deletePost };
+/**
+ * Represents the result of a cache purge request to Cloudflare.
+ */
+interface PurgeCacheResponse {
+  errors: any[]; // Array of error messages, if any
+  messages: any[]; // Array of messages, if any
+  success: boolean; // Indicates whether the request was successful
+  result: {
+    id: string; // The ID of the purge request
+  };
+}
+
+const purgeCloudflarePostsCache = async (postKey: String) => {
+  if (
+    !process.env.CLOUDFLARE_ZONE_ID ||
+    !process.env.CLOUDFLARE_CACHE_PURGE_API_TOKEN
+  ) {
+    logger.error(
+      "Missing Cloudflare credentials: CLOUDFLARE_ZONE_ID or CLOUDFLARE_CACHE_PURGE_API_TOKEN",
+    );
+    throwError();
+  }
+
+  // Define the Cloudflare API endpoint and headers
+  const url = `https://api.cloudflare.com/client/v4/zones/${process.env.CLOUDFLARE_ZONE_ID}/purge_cache`;
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${process.env.CLOUDFLARE_CACHE_PURGE_API_TOKEN}`,
+  };
+  const data = {
+    prefixes: [`www.derpdevstuffs.org/posts${postKey ? `/${postKey}` : ""}`],
+  };
+  const response: PurgeCacheResponse = await axios.post(url, data, { headers });
+
+  if (response.success) {
+    logger.info("Cloudflare cache purged successfully");
+    return response;
+  } else {
+    logger.error(
+      `Failed to purge Cloudflare cache: ${JSON.stringify(response.errors)}`,
+    );
+    throwError();
+  }
+};
+
+export {
+  createNewPost,
+  getPosts,
+  getSinglePost,
+  editPost,
+  deletePost,
+  likePost,
+  unlikePost,
+};

@@ -1,6 +1,9 @@
 import express, { Request, Response } from "express";
 import viewsCounter from "../controllers/views-counter";
-import authGuard from "../middleware/auth-guard";
+import {
+  authenticateFirebaseId,
+  verifyRole,
+} from "../auth/authenticate-firebase-cred";
 import {
   createNewPost,
   getPosts,
@@ -20,16 +23,15 @@ commentRouter.route("/comment").post(createNewComment).delete(deleteComment);
 
 const router = express.Router();
 
-router.route("/views").get(authGuard, viewsCounter);
-
-router.route("/posts").post(createNewPost).get(getPosts);
-router.route("/post/:id").get(getSinglePost).patch(editPost).delete(deletePost);
-router.use("/post/:id", commentRouter);
-
 router
-  .route("/user/:id")
-  .patch(editUserProfile)
-  .delete(deleteUser)
-  .get(getUserProfile);
+  .route("/posts")
+  .post(verifyRole(["writer", "admin"]), createNewPost)
+  .get(getPosts);
+router
+  .route("/post/:id")
+  .get(getSinglePost)
+  .patch(verifyRole(["writer", "admin"]), editPost)
+  .delete(verifyRole(["writer", "admin"]), deletePost);
+router.use("/post/:id", commentRouter);
 
 export default router;

@@ -46,6 +46,7 @@ const getMongooseClient = (): Promise<MongoClient> => {
 };
 
 //MongoDB session
+// TODO: Use JWT instead
 const sessionStorage = new MongoStore({
   clientPromise: getMongooseClient(),
   collectionName: "sessions",

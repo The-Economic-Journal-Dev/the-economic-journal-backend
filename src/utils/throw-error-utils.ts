@@ -1,8 +1,8 @@
 import { HttpError } from "../errors/custom-errors";
 
 const throwErrorImpl = function (
-  messageOrError: string | Error,
-  statusCode?: number,
+  messageOrError: string | Error = "Internal Server Error",
+  statusCode: number = 500,
 ): never {
   let error: HttpError;
   if (messageOrError instanceof Error) {
@@ -12,8 +12,8 @@ const throwErrorImpl = function (
     }
   } else {
     const message = messageOrError as string;
-    error = new HttpError(message, statusCode || 500);
-    error.status = statusCode || 500;
+    error = new HttpError(message, statusCode);
+    error.status = statusCode;
   }
   throw error;
 };
@@ -27,7 +27,7 @@ declare global {
    * @throws {HttpError} - Throws an HttpError with the specified message and status code.
    */
   function throwError(
-    messageOrError: string | Error,
+    messageOrError?: string | Error,
     statusCode?: number,
   ): never;
 }
