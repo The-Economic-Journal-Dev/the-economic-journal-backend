@@ -12,9 +12,10 @@ import createS3Client, { S3Config } from "./clients/s3";
 
 // Define the S3 configuration
 const s3Config: S3Config = {
-  region: process.env.AWS_REGION!,
+  region: "auto",
   accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  endpoint: process.env.AWS_S3_API_ENDPOINT!,
 };
 
 // Create an S3 client

@@ -1,10 +1,9 @@
 import express, { Request, Response } from "express";
-
-import authGuard from "../middleware/auth-guard";
+import { authenticateFirebaseId } from "../auth/authenticate-firebase-cred";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const htmlContent = `
         <!DOCTYPE html>
         <html lang="en">
@@ -21,12 +20,14 @@ router.get("/", (req, res) => {
   res.send(htmlContent);
 });
 
-router.route("/protected").get(authGuard, (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: "User authenticated with a session",
-    user: req.user,
+router
+  .route("/protected")
+  .get(authenticateFirebaseId, (req: Request, res: Response) => {
+    res.json({
+      success: true,
+      message: "User authenticated with a session",
+      user: req.user,
+    });
   });
-});
 
 export default router;

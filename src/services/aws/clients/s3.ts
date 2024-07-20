@@ -13,6 +13,7 @@ export interface S3Config {
   region: string;
   accessKeyId: string;
   secretAccessKey: string;
+  endpoint: string;
 }
 
 // Function to create and return an S3 client
@@ -33,6 +34,7 @@ export interface S3Config {
 const createS3Client = (config: S3Config): S3Client => {
   return new S3Client({
     region: config.region,
+    endpoint: config.endpoint,
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
