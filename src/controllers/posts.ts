@@ -26,7 +26,6 @@ function isAcceptedMimetype(mimetype: string): boolean {
 }
 
 const createNewPost = [
-  verifyRole(["admin", "writer"]),
   upload.fields([
     {
       name: "image",
@@ -161,7 +160,6 @@ function extractImageName(url?: string): string | undefined {
 }
 
 const editPost = [
-  verifyRole(["writer", "admin"]),
   upload.fields([
     {
       name: "image",
@@ -243,7 +241,6 @@ const editPost = [
 ];
 
 const deletePost = [
-  verifyRole(["writer", "admin"]),
   async (req: Request, res: Response) => {
     try {
       const { id: postId } = req.params;

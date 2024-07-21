@@ -45,25 +45,4 @@ const getMongooseClient = (): Promise<MongoClient> => {
   });
 };
 
-//MongoDB session
-// TODO: Use JWT instead
-const sessionStorage = new MongoStore({
-  clientPromise: getMongooseClient(),
-  collectionName: "sessions",
-  ttl: 60 * 60 * 24 * 14, // 2 week
-  autoRemove: "native",
-});
-
-sessionStorage.on("connected", () => {
-  console.log("MongoDB session storage connected");
-});
-
-sessionStorage.on("error", (error) => {
-  console.log(
-    "An error occurred while connecting to MongoDB session storage: " + error,
-  );
-  throw error;
-});
-
-export { sessionStorage };
 export default connectToDB;

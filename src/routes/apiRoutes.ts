@@ -1,5 +1,4 @@
 import express, { Request, Response } from "express";
-import viewsCounter from "../controllers/views-counter";
 import {
   authenticateFirebaseId,
   verifyRole,
@@ -11,11 +10,6 @@ import {
   editPost,
   deletePost,
 } from "../controllers/posts";
-import {
-  deleteUser,
-  editUserProfile,
-  getUserProfile,
-} from "../controllers/users";
 import { createNewComment, deleteComment } from "../controllers/comments";
 
 const commentRouter = express.Router();

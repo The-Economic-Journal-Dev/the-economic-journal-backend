@@ -24,8 +24,6 @@ const authenticateFirebaseId = async (
     .then((decodedToken) => {
       req.user = {
         uid: decodedToken.uid,
-        email: decodedToken.email,
-        displayName: decodedToken.displayName,
         role: decodedToken.role, // Assuming 'role' is a custom claim
       };
       next();
