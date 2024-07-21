@@ -5,12 +5,12 @@ import "./config/logger-config";
 
 import errorHandler from "./middleware/error-handler";
 
-import express from "express"; // Import Express
+import express, { Request, Response } from "express"; // Import Express
 const app = express(); // Create an Express application
 
 import connectToDB from "./db/connect"; // Import the database connection function
 
-import mainRoutes from "./routes/mainRoutes"; // Import the main routes serving the HTML
+import { authenticateFirebaseId } from "./auth/authenticate-firebase-cred";
 import apiRoutes from "./routes/apiRoutes"; // Import the main routes serving the HTML
 import helmet from "helmet";
 import cors from "cors";
@@ -27,7 +27,35 @@ app.use(express.urlencoded({ extended: true }));
 connectToDB(process.env.MONGO_URI!);
 
 // Routes
-app.use(mainRoutes);
+app.get("/", async (req, res) => {
+  const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Hello World!</title>
+        </head>
+        <body>
+            <h1>Hello World!</h1>
+        </body>
+        </html>
+    `;
+  res.send(htmlContent);
+});
+
+app.get(
+  "/protected",
+  authenticateFirebaseId,
+  async (req: Request, res: Response) => {
+    res.json({
+      success: true,
+      message: "User authenticated with a session",
+      user: req.user,
+    });
+  },
+);
+
 app.use(apiRoutes);
 
 app.use(errorHandler);
