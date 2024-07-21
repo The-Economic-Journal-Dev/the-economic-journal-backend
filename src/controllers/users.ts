@@ -1,199 +1,201 @@
-import { Request, Response } from "express";
-import { authenticateFirebaseId } from "../auth/authenticate-firebase-cred";
-import { StatusCodes } from "http-status-codes";
-import { UserModel, IUser } from "../models/UserModel";
-import bcryptjs from "bcryptjs";
-import upload from "../config/multer-config";
-import { uploadFileToS3 } from "../services/aws/s3-file-manager";
+// IMPORTANT: This code is deprecated in favor of using firebase in the frontend instead
 
-// Define the types for files
-interface MulterFiles {
-  [fieldname: string]: Express.Multer.File[];
-}
+// import { Request, Response } from "express";
+// import { authenticateFirebaseId } from "../auth/authenticate-firebase-cred";
+// import { StatusCodes } from "http-status-codes";
+// import { UserModel, IUser } from "../models/UserModel";
+// import bcryptjs from "bcryptjs";
+// import upload from "../config/multer-config";
+// import { uploadFileToS3 } from "../services/aws/s3-file-manager";
 
-/**
- * Checks if the mimetype is one of the accepted image types (gif, jpg, jpeg, png).
- * @param {string} mimetype - The mimetype to check.
- * @returns {boolean} True if the mimetype is an accepted image type, false otherwise.
- */
-function isAcceptedMimetype(mimetype: string): boolean {
-  const acceptedImagePattern = /^image\/(gif|jpg|jpeg|png)$/;
-  return acceptedImagePattern.test(mimetype);
-}
+// // Define the types for files
+// interface MulterFiles {
+//   [fieldname: string]: Express.Multer.File[];
+// }
 
-const editUserProfile = [
-  authenticateFirebaseId,
-  upload.fields([
-    {
-      name: "image",
-      maxCount: 1,
-    },
-  ]),
-  async (req: Request, res: Response): Promise<void> => {
-    const { displayName } = req.body; // New profile data from request body
-    const userId = (req.user as any)._id; // Assuming req.user is populated with user info
+// /**
+//  * Checks if the mimetype is one of the accepted image types (gif, jpg, jpeg, png).
+//  * @param {string} mimetype - The mimetype to check.
+//  * @returns {boolean} True if the mimetype is an accepted image type, false otherwise.
+//  */
+// function isAcceptedMimetype(mimetype: string): boolean {
+//   const acceptedImagePattern = /^image\/(gif|jpg|jpeg|png)$/;
+//   return acceptedImagePattern.test(mimetype);
+// }
 
-    const files = req.files as MulterFiles;
+// const editUserProfile = [
+//   authenticateFirebaseId,
+//   upload.fields([
+//     {
+//       name: "image",
+//       maxCount: 1,
+//     },
+//   ]),
+//   async (req: Request, res: Response): Promise<void> => {
+//     const { displayName } = req.body; // New profile data from request body
+//     const userId = (req.user as any)._id; // Assuming req.user is populated with user info
 
-    let imageUrl = "";
-    const image = files["image"][0];
-    if (image) {
-      if (!isAcceptedMimetype(image.mimetype)) {
-        throwError(
-          `Invalid mimetype for file ${image.filename}.`,
-          StatusCodes.BAD_REQUEST,
-        );
-      }
-      imageUrl = await uploadFileToS3(image);
-      newProfile.profilePictureUrl = imageUrl;
-    }
+//     const files = req.files as MulterFiles;
 
-    // Check if the newProfile contains a password
-    if (!newProfile.password) {
-      throwError(
-        "Password is required for profile update.",
-        StatusCodes.BAD_REQUEST,
-      );
-    }
+//     let imageUrl = "";
+//     const image = files["image"][0];
+//     if (image) {
+//       if (!isAcceptedMimetype(image.mimetype)) {
+//         throwError(
+//           `Invalid mimetype for file ${image.filename}.`,
+//           StatusCodes.BAD_REQUEST,
+//         );
+//       }
+//       imageUrl = await uploadFileToS3(image);
+//       newProfile.profilePictureUrl = imageUrl;
+//     }
 
-    // Find the user by ID
-    const user: IUser | null =
-      await UserModel.findById(userId).select("+password");
+//     // Check if the newProfile contains a password
+//     if (!newProfile.password) {
+//       throwError(
+//         "Password is required for profile update.",
+//         StatusCodes.BAD_REQUEST,
+//       );
+//     }
 
-    if (!user) {
-      throwError(
-        `User ${(req.user as any).username} is not authorised for this action.`,
-        StatusCodes.UNAUTHORIZED,
-      );
-    }
+//     // Find the user by ID
+//     const user: IUser | null =
+//       await UserModel.findById(userId).select("+password");
 
-    // Verify password
-    const isPasswordValid = await bcryptjs.compare(
-      newProfile.password!,
-      user!.password,
-    );
+//     if (!user) {
+//       throwError(
+//         `User ${(req.user as any).username} is not authorised for this action.`,
+//         StatusCodes.UNAUTHORIZED,
+//       );
+//     }
 
-    if (!isPasswordValid) {
-      throwError(`Invalid password.`, StatusCodes.UNAUTHORIZED);
-    }
+//     // Verify password
+//     const isPasswordValid = await bcryptjs.compare(
+//       newProfile.password!,
+//       user!.password,
+//     );
 
-    // Update the user's profile fields
-    Object.keys(newProfile).forEach((key) => {
-      if (key !== "password") {
-        (user as any)[key] = (newProfile as any)[key];
-      }
-    });
+//     if (!isPasswordValid) {
+//       throwError(`Invalid password.`, StatusCodes.UNAUTHORIZED);
+//     }
 
-    // Save the updated user profile
-    const updatedUser = await user!.save();
+//     // Update the user's profile fields
+//     Object.keys(newProfile).forEach((key) => {
+//       if (key !== "password") {
+//         (user as any)[key] = (newProfile as any)[key];
+//       }
+//     });
 
-    // Send updated user profile as response
-    res.status(StatusCodes.OK).json({
-      message: "Profile updated successfully",
-      user: updatedUser,
-    });
-  },
-];
+//     // Save the updated user profile
+//     const updatedUser = await user!.save();
 
-const deleteUser = [
-  authGuard,
-  async (req: Request, res: Response) => {
-    const { password } = req.body;
-    const userId = (req.user as any)._id; // Assuming req.user is populated with user info
+//     // Send updated user profile as response
+//     res.status(StatusCodes.OK).json({
+//       message: "Profile updated successfully",
+//       user: updatedUser,
+//     });
+//   },
+// ];
 
-    // Check if the newProfile contains a password
-    if (!password) {
-      throwError(
-        "Password is required for account deletion.",
-        StatusCodes.BAD_REQUEST,
-      );
-    }
+// const deleteUser = [
+//   authGuard,
+//   async (req: Request, res: Response) => {
+//     const { password } = req.body;
+//     const userId = (req.user as any)._id; // Assuming req.user is populated with user info
 
-    // Find the user by ID
-    const user: IUser | null =
-      await UserModel.findById(userId).select("+password");
+//     // Check if the newProfile contains a password
+//     if (!password) {
+//       throwError(
+//         "Password is required for account deletion.",
+//         StatusCodes.BAD_REQUEST,
+//       );
+//     }
 
-    // Verify password
-    const isPasswordValid = await bcryptjs.compare(password, user!.password);
+//     // Find the user by ID
+//     const user: IUser | null =
+//       await UserModel.findById(userId).select("+password");
 
-    if (!isPasswordValid) {
-      throwError(`Invalid password.`, StatusCodes.UNAUTHORIZED);
-    }
+//     // Verify password
+//     const isPasswordValid = await bcryptjs.compare(password, user!.password);
 
-    // Delete the user
-    await user!.remove();
+//     if (!isPasswordValid) {
+//       throwError(`Invalid password.`, StatusCodes.UNAUTHORIZED);
+//     }
 
-    res.json({
-      success: true,
-      message: "User deleted successfully!",
-      user: null,
-    });
-  },
-];
+//     // Delete the user
+//     await user!.remove();
 
-const getUserProfile = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+//     res.json({
+//       success: true,
+//       message: "User deleted successfully!",
+//       user: null,
+//     });
+//   },
+// ];
 
-  const user = await UserModel.findById(userId);
+// const getUserProfile = async (req: Request, res: Response) => {
+//   const { userId } = req.params;
 
-  res.status(StatusCodes.OK).json({
-    success: true,
-    user,
-  });
-};
+//   const user = await UserModel.findById(userId);
 
-const changeUserPassword = async (req: Request, res: Response) => {
-  const { email, username, oldPassword, newPassword, confirmNewPassword } =
-    req.body;
+//   res.status(StatusCodes.OK).json({
+//     success: true,
+//     user,
+//   });
+// };
 
-  // Check if all required fields are provided
-  if (!username || !oldPassword || !newPassword || !confirmNewPassword) {
-    throwError("Required fields are missing", StatusCodes.BAD_REQUEST);
-  }
+// const changeUserPassword = async (req: Request, res: Response) => {
+//   const { email, username, oldPassword, newPassword, confirmNewPassword } =
+//     req.body;
 
-  if (newPassword !== confirmNewPassword) {
-    throwError(
-      "New password and confirmation do not match.",
-      StatusCodes.BAD_REQUEST,
-    );
-  }
+//   // Check if all required fields are provided
+//   if (!username || !oldPassword || !newPassword || !confirmNewPassword) {
+//     throwError("Required fields are missing", StatusCodes.BAD_REQUEST);
+//   }
 
-  // Find the user by ID
-  // Find the user by username or email
-  const user: IUser | null = await UserModel.findOne({
-    $or: [{ username: username }, { email: email }],
-  }).select("+password");
+//   if (newPassword !== confirmNewPassword) {
+//     throwError(
+//       "New password and confirmation do not match.",
+//       StatusCodes.BAD_REQUEST,
+//     );
+//   }
 
-  if (!user) {
-    throwError(
-      `User not found or not authorized for this action.`,
-      StatusCodes.UNAUTHORIZED,
-    );
-  }
+//   // Find the user by ID
+//   // Find the user by username or email
+//   const user: IUser | null = await UserModel.findOne({
+//     $or: [{ username: username }, { email: email }],
+//   }).select("+password");
 
-  // Verify old password
-  const isPasswordValid = await bcryptjs.compare(oldPassword, user!.password);
+//   if (!user) {
+//     throwError(
+//       `User not found or not authorized for this action.`,
+//       StatusCodes.UNAUTHORIZED,
+//     );
+//   }
 
-  if (!isPasswordValid) {
-    throwError(`Invalid password.`, StatusCodes.UNAUTHORIZED);
-  }
+//   // Verify old password
+//   const isPasswordValid = await bcryptjs.compare(oldPassword, user!.password);
 
-  // Update the user's password
-  user!.password = newPassword;
+//   if (!isPasswordValid) {
+//     throwError(`Invalid password.`, StatusCodes.UNAUTHORIZED);
+//   }
 
-  // Save the updated user
-  await user!.save();
+//   // Update the user's password
+//   user!.password = newPassword;
 
-  res.json({
-    success: true,
-    message: "Password changed successfully",
-  });
-};
+//   // Save the updated user
+//   await user!.save();
 
-export {
-  activateUser,
-  editUserProfile,
-  deleteUser,
-  getUserProfile,
-  changeUserPassword,
-};
+//   res.json({
+//     success: true,
+//     message: "Password changed successfully",
+//   });
+// };
+
+// export {
+//   activateUser,
+//   editUserProfile,
+//   deleteUser,
+//   getUserProfile,
+//   changeUserPassword,
+// };

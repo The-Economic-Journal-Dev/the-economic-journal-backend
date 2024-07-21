@@ -1,12 +1,12 @@
 import { StatusCodes } from "http-status-codes";
-import authGuard from "../middleware/auth-guard";
 import { CommentModel, IComment } from "../models/CommentModel";
 import { Request, Response } from "express";
 import { PostModel, IPost } from "../models/PostModel";
+import { authenticateFirebaseId } from "../auth/authenticate-firebase-cred";
 
 // TODO: put all session blocks/guard in a reusesable util function that can accept role restrictions
 const createNewComment = [
-  authGuard,
+  authenticateFirebaseId,
   async (req: Request, res: Response) => {
     const postId = req.params.postId;
     const { content, targetId } = req.body;
@@ -45,11 +45,14 @@ const createNewComment = [
 ];
 
 const deleteComment = [
-  authGuard,
+  authenticateFirebaseId,
   async (req: Request, res: Response) => {
     const { targetId } = req.body;
 
-    const comment = await CommentModel.findByIdAndRemove(targetId);
+    const comment = await CommentModel.findOneAndRemove({
+      targetId,
+      userId: (req.user as any)._id,
+    });
 
     if (comment) {
       throwError("Comment not found", StatusCodes.BAD_REQUEST);
