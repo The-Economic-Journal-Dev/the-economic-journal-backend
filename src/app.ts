@@ -56,7 +56,7 @@ app.get(
   },
 );
 
-app.use(apiRoutes);
+app.use("/", apiRoutes);
 
 app.use(errorHandler);
 
