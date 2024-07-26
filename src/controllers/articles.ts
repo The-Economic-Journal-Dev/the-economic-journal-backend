@@ -10,6 +10,7 @@ import upload from "../config/multer-config";
 import axios from "axios";
 import ejs from "ejs";
 import sanitizeHtml from "sanitize-html";
+import path from "path";
 
 // Define the types for files
 interface MulterFiles {
@@ -38,8 +39,10 @@ const createNewArticle = [
     const { title, summary, articleBody, metaTitle, category } = req.body;
 
     const files = req.files as MulterFiles;
+    logger.info(files);
 
-    const authorUid = req.user!.uid;
+    const authorUid =
+      process.env.NODE_ENV === "development" ? "00000000000001" : req.user!.uid;
 
     const articleValidationResult = validateArticle({
       title,
@@ -56,8 +59,10 @@ const createNewArticle = [
     }
 
     let imageUrl = "";
-    const image = files["image"][0];
-    if (image) {
+    const images = files["image"];
+    console.log(images);
+    if (images) {
+      const image = images[0];
       if (!isAcceptedMimetype(image.mimetype)) {
         throwError(
           `Invalid mimetype for file ${image.filename}.`,
@@ -70,6 +75,8 @@ const createNewArticle = [
     const newArticle = new ArticleModel({
       authorUid,
       title,
+      metaTitle,
+      category,
       imageUrl,
       summary,
       articleBody,
@@ -93,17 +100,24 @@ const createNewArticle = [
       allowedAttributes: {},
     });
 
+    const data = {
+      article: {
+        title: sanitizedTitle,
+        authorUid,
+        metaTitle: sanitizedMetaTitle,
+        imageUrl,
+        summary: sanitizedSummary,
+        articleBody: sanitizedArticleBody,
+        category: sanitizeCategory,
+        datePublished: newArticle.datePublished,
+      },
+    };
+
     // Render the article HTML using EJS template
-    const html = await ejs.renderFile("../templates/article.ejs", {
-      title: sanitizedTitle,
-      authorUid,
-      metaTitle: sanitizedMetaTitle,
-      imageUrl,
-      summary: sanitizedSummary,
-      articleBody: sanitizedArticleBody,
-      category: sanitizeCategory,
-      datePublished: newArticle.datePublished,
-    });
+    const html = await ejs.renderFile(
+      path.resolve(__dirname, "../templates/article.ejs"),
+      data,
+    );
 
     await newArticle.save();
 

@@ -19,7 +19,7 @@ const router = express.Router();
 
 router
   .route("/articles")
-  .post(verifyRole(["writer", "admin"]), createNewArticle)
+  .post(createNewArticle) // verifyRole(["writer", "admin"])
   .get(getArticles);
 router
   .route("/articles/:id")

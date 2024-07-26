@@ -84,11 +84,6 @@ const uploadFileToS3Service = async (
       params: uploadParams,
     });
 
-    // Listen to the upload progress event
-    parallelUploads3.on("httpUploadProgress", (progress) => {
-      console.log(progress);
-    });
-
     // Await the completion of the upload
     await parallelUploads3.done();
     console.log(`File uploaded successfully to ${config.Bucket}/${config.Key}`);
