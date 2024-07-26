@@ -36,7 +36,8 @@ const createNewArticle = [
     },
   ]),
   async (req: Request, res: Response) => {
-    const { title, summary, articleBody, metaTitle, category } = req.body;
+    const { title, summary, articleBody, metaTitle, category, position } =
+      req.body;
 
     const files = req.files as MulterFiles;
     logger.info(files);
@@ -80,6 +81,7 @@ const createNewArticle = [
       imageUrl,
       summary,
       articleBody,
+      position,
     });
 
     // Sanitize the title and other fields to prevent XSS attacks

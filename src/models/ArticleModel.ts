@@ -3,8 +3,9 @@ import { CommentModel, IComment } from "./CommentModel";
 
 // TypeScript interface to define the schema fields for Article
 interface IArticle extends Document {
-  authorId: Schema.Types.ObjectId;
+  authorUid: Schema.Types.ObjectId;
   title: string;
+  metaTitle: string;
   datePublished: Date;
   imageUrl?: string;
   summary?: string;
@@ -36,6 +37,12 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
   datePublished: {
     type: Date,
     default: Date.now(),
+  },
+  position: {
+    type: Number,
+    default: 5,
+    min: 1,
+    max: 10,
   },
   imageUrl: {
     type: String,
