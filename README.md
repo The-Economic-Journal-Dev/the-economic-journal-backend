@@ -35,14 +35,14 @@ fetch("/something")
    3. [Login](#login-endpoint)
    4. [Check Session](#check-session-endpoint)
    5. [Logout](#logout-endpoint)
-2. [Posts Endpoints](#posts)
+2. [Articles Endpoints](#articles)
    1. [Tips and Tricks](#tips-and-tricks)
    2. [Quill HTML editor](#quill-html-editor)
-   3. [Create a New Post](#create-a-new-post)
-   4. [Get Posts](#get-posts)
-   5. [Get Single Post](#get-single-post)
-   6. [Edit Post](#edit-post)
-   7. [Delete Post](#edit-post)
+   3. [Create a New Article](#create-a-new-article)
+   4. [Get Articles](#get-articles)
+   5. [Get Single Article](#get-single-article)
+   6. [Edit Article](#edit-article)
+   7. [Delete Article](#edit-article)
    8. [Create New Comment](#create-new-comment)
 3. [User Profile Endpoints](#user-profile-endpoints)
 4. [Errors](#errors)
@@ -190,13 +190,13 @@ add an `?=` after the URL lie this: `/auth/verify?token={INSERT TOKEN HERE}`
 }
 ```
 
-# Posts
+# Articles
 
 ## Tips and Tricks
 
 It's written in pairs of `Name: Type`
 
-### Post JSON format:
+### Article JSON format:
 
 ```json
 {
@@ -206,7 +206,7 @@ It's written in pairs of `Name: Type`
    "datePublished": Date,
    "imageURL": string,
    "summary": string,
-   "postBody": string, // postBody is just html of the post in plain text
+   "articleBody": string, // articleBody is just html of the article in plain text
 }
 ```
 
@@ -216,11 +216,11 @@ The frontend currently only need to send in the body this in FormData:
 {
    "title": string,
    "summary": string,
-   "postBody": Object, // postBody is just html of the post in plain text. See "Quill HTML editor" for more info
+   "articleBody": Object, // articleBody is just html of the article in plain text. See "Quill HTML editor" for more info
 }
 ```
 
-**_IMPORTANT:_** To supply the post with an image for the banner, a form with the `enctype="multipart/form-data"` type must be present and a `<input>` with property `name="image"` (only a single image is allowed). Remember to send the data though FormData if you're using javascript to send the request.
+**_IMPORTANT:_** To supply the article with an image for the banner, a form with the `enctype="multipart/form-data"` type must be present and a `<input>` with property `name="image"` (only a single image is allowed). Remember to send the data though FormData if you're using javascript to send the request.
 <br></br>
 
 #### Example file input html:
@@ -230,7 +230,7 @@ The frontend currently only need to send in the body this in FormData:
 
 ## Quill HTML editor
 
-See `new-post.html` for more clarity.
+See `new-article.html` for more clarity.
 
 ### 1. Make a HTML editor
 
@@ -275,13 +275,13 @@ To get the HTML out of the editor to send to the backend, use:
 const html = quill.getSemanticHTML(0);
 ```
 
-## Create a New Post
+## Create a New Article
 
-Creates a new post with specified details and optionally uploads an image.
+Creates a new article with specified details and optionally uploads an image.
 
 ### URL:
 
-`/api/posts`
+`/api/articles`
 
 ### Method:
 
@@ -297,7 +297,7 @@ Creates a new post with specified details and optionally uploads an image.
 {
   "title": "example title",
   "summary": "example summary",
-  "postBody": "<p>Example Body</p>"
+  "articleBody": "<p>Example Body</p>"
 }
 ```
 
@@ -306,18 +306,18 @@ Creates a new post with specified details and optionally uploads an image.
 ```json
 {
   "success": true,
-  "message": "Post created successfully",
-  "post": { ... } // Details of the created post
+  "message": "Article created successfully",
+  "article": { ... } // Details of the created article
 }
 ```
 
-## Get Posts
+## Get Articles
 
-Retrieves a list of posts with optional pagination and content inclusion.
+Retrieves a list of articles with optional pagination and content inclusion.
 
 ### URL:
 
-`/api/posts`
+`/api/articles`
 
 ### Method:
 
@@ -328,8 +328,8 @@ Retrieves a list of posts with optional pagination and content inclusion.
 ```json
 {
   "pageNumber": 1, // (number, default: 1): Page number for pagination.
-  "count": 20, // (number, default: 20): Number of posts per page.
-  "includeBody": true // (boolean, default: false): Whether to include full post body.
+  "count": 20, // (number, default: 20): Number of articles per page.
+  "includeBody": true // (boolean, default: false): Whether to include full article body.
 }
 ```
 
@@ -338,18 +338,18 @@ Retrieves a list of posts with optional pagination and content inclusion.
 ```json
 {
   "success": true,
-  "message": "Posts fetched successfully",
-  "posts": [ ... ] // Array of posts
+  "message": "Articles fetched successfully",
+  "articles": [ ... ] // Array of articles
 }
 ```
 
-## Get Single Post
+## Get Single Article
 
-Retrieves details of a single post by its ID.
+Retrieves details of a single article by its ID.
 
 ### URL:
 
-`/api/post/:id`
+`/api/article/:id`
 
 ### Method:
 
@@ -357,15 +357,15 @@ Retrieves details of a single post by its ID.
 
 ### Path Parameters:
 
-`id (string): ID of the post to retrieve.`
+`id (string): ID of the article to retrieve.`
 
 ### Request:
 
 ```json
 {
   "pageNumber": 1, // (number, default: 1): Page number for pagination.
-  "count": 20, // (number, default: 20): Number of posts per page.
-  "includeBody": true // (boolean, default: false): Whether to include full post body.
+  "count": 20, // (number, default: 20): Number of articles per page.
+  "includeBody": true // (boolean, default: false): Whether to include full article body.
 }
 ```
 
@@ -374,18 +374,18 @@ Retrieves details of a single post by its ID.
 ```json
 {
   "success": true,
-  "message": "Post fetched successfully",
-  "post": { ... } // Details of the fetched post
+  "message": "Article fetched successfully",
+  "article": { ... } // Details of the fetched article
 }
 ```
 
-## Edit Post
+## Edit Article
 
-Updates details of an existing post identified by its ID.
+Updates details of an existing article identified by its ID.
 
 ### URL:
 
-`/api/post/:id`
+`/api/article/:id`
 
 ### Method:
 
@@ -393,7 +393,7 @@ Updates details of an existing post identified by its ID.
 
 ### Path Parameters:
 
-`id (string): ID of the post to retrieve.`
+`id (string): ID of the article to retrieve.`
 
 ### Request File(s):
 
@@ -403,9 +403,9 @@ Updates details of an existing post identified by its ID.
 
 ```json
 {
-  "title": 1, // (string): Updated title of the post
-  "summary": 20, // (string): Updated summary or excerpt of the post.
-  "postBody": true // (string): Updated main content body of the post.
+  "title": 1, // (string): Updated title of the article
+  "summary": 20, // (string): Updated summary or excerpt of the article.
+  "articleBody": true // (string): Updated main content body of the article.
 }
 ```
 
@@ -414,18 +414,18 @@ Updates details of an existing post identified by its ID.
 ```json
 {
   "success": true,
-  "message": "Post with id: {postId} edited successfully.",
-  "post": { ... } // Details of the edited post
+  "message": "Article with id: {articleId} edited successfully.",
+  "article": { ... } // Details of the edited article
 }
 ```
 
-## Delete Post
+## Delete Article
 
-Deletes an existing post identified by its ID.
+Deletes an existing article identified by its ID.
 
 ### URL:
 
-`/api/post/:id`
+`/api/article/:id`
 
 ### Method:
 
@@ -433,15 +433,15 @@ Deletes an existing post identified by its ID.
 
 ### Path Parameters:
 
-`id (string): ID of the post to delete.`
+`id (string): ID of the article to delete.`
 
 ### Request:
 
 ```json
 {
-  "title": 1, // (string): Updated title of the post
-  "summary": 20, // (string): Updated summary or excerpt of the post.
-  "postBody": true // (string): Updated main content body of the post.
+  "title": 1, // (string): Updated title of the article
+  "summary": 20, // (string): Updated summary or excerpt of the article.
+  "articleBody": true // (string): Updated main content body of the article.
 }
 ```
 
@@ -450,7 +450,7 @@ Deletes an existing post identified by its ID.
 ```json
 {
   "success": true,
-  "message": "Post deleted successfully"
+  "message": "Article deleted successfully"
 }
 ```
 
@@ -458,7 +458,7 @@ Deletes an existing post identified by its ID.
 
 ### URL:
 
-`/api/post/:id/comment`
+`/api/article/:id/comment`
 
 ### Method:
 
@@ -469,7 +469,7 @@ Deletes an existing post identified by its ID.
 ```json
 {
   "content": "body of the comment", // (string): The text content of the comment
-  "targetId": "exampleID" // (string): The id of the target comment to create a comment for. Leave blank or dont provide a target if commenting on a post
+  "targetId": "exampleID" // (string): The id of the target comment to create a comment for. Leave blank or dont provide a target if commenting on a article
 }
 ```
 
@@ -487,7 +487,7 @@ Deletes an existing post identified by its ID.
 
 ### URL:
 
-`/api/post/:id/comment`
+`/api/article/:id/comment`
 
 ### Method:
 

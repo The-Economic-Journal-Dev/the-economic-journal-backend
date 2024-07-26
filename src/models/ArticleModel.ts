@@ -1,24 +1,23 @@
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
 import { CommentModel, IComment } from "./CommentModel";
 
-// TypeScript interface to define the schema fields for Post
-interface IPost extends Document {
+// TypeScript interface to define the schema fields for Article
+interface IArticle extends Document {
   authorId: Schema.Types.ObjectId;
   title: string;
   datePublished: Date;
   imageUrl?: string;
   summary?: string;
-  postBody: string;
-  category: "Technology" | "Science" | "Health" | "Business" | "Other";
+  articleBody: string;
+  category: "Finance" | "Economic" | "Business" | "Entrepreneurship";
   likedBy: Types.Array<Types.ObjectId>;
   likesCount: number;
 }
 
-const PostSchema: Schema<IPost> = new Schema<IPost>({
-  authorId: {
-    type: Schema.Types.ObjectId,
+const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
+  authorUid: {
+    type: String,
     required: true,
-    ref: "Users", // Reference to User model
   },
   title: {
     type: String,
@@ -26,6 +25,13 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
     unique: true,
     minlength: 1,
     maxlength: 128,
+  },
+  metaTitle: {
+    type: String,
+    required: true,
+    unique: true,
+    minlength: 1,
+    maxlength: 64,
   },
   datePublished: {
     type: Date,
@@ -37,7 +43,7 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
   summary: {
     type: String,
   },
-  postBody: {
+  articleBody: {
     type: String,
     required: true,
     select: false,
@@ -60,26 +66,29 @@ const PostSchema: Schema<IPost> = new Schema<IPost>({
   },
 });
 
-PostSchema.index({ category: 1, datePublished: -1 });
+ArticleSchema.index({ category: 1, datePublished: -1 });
 
 // Pre-save hook to update likesCount
-PostSchema.pre("save", async function (next) {
+ArticleSchema.pre("save", async function (next) {
   if (this.isModified("likedBy")) {
     this.likesCount = this.likedBy.length;
   }
   next();
 });
 
-PostSchema.pre<IComment>("remove", async function (next) {
+ArticleSchema.pre<IComment>("remove", async function (next) {
   try {
     // Delete all child comments
-    await PostModel.deleteMany({ postId: this._id });
+    await ArticleModel.deleteMany({ articleId: this._id });
     next();
   } catch (error) {
     next(error as Error);
   }
 });
 
-const PostModel: Model<IPost> = mongoose.model<IPost>("Posts", PostSchema);
+const ArticleModel: Model<IArticle> = mongoose.model<IArticle>(
+  "Articles",
+  ArticleSchema,
+);
 
-export { PostModel, IPost, IComment };
+export { ArticleModel, IArticle, IComment };
