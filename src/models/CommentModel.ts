@@ -3,7 +3,7 @@ import mongoose, { Document, Schema, Model, SchemaType } from "mongoose";
 
 // Interface for comments
 interface IComment extends Document {
-  postId: Schema.Types.ObjectId;
+  articleId: Schema.Types.ObjectId;
   parentCommentId?: Schema.Types.ObjectId;
   userId: Schema.Types.ObjectId;
   content: string;
@@ -11,9 +11,9 @@ interface IComment extends Document {
 }
 
 const CommentSchema: Schema<IComment> = new Schema<IComment>({
-  postId: {
+  articleId: {
     type: Schema.Types.ObjectId,
-    ref: "Posts",
+    ref: "Articles",
     required: true,
     index: true,
   },

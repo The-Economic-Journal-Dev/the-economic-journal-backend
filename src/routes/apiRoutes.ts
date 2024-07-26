@@ -4,28 +4,28 @@ import {
   verifyRole,
 } from "../auth/authenticate-firebase-cred";
 import {
-  createNewPost,
-  getPosts,
-  getSinglePost,
-  editPost,
-  deletePost,
-} from "../controllers/posts";
+  createNewArticle,
+  getArticles,
+  getSingleArticle,
+  editArticle,
+  deleteArticle,
+} from "../controllers/articles";
 import { createNewComment, deleteComment } from "../controllers/comments";
 
 const commentRouter = express.Router();
-commentRouter.route("/comment").post(createNewComment).delete(deleteComment);
+commentRouter.route("/comments").post(createNewComment).delete(deleteComment);
 
 const router = express.Router();
 
 router
-  .route("/posts")
-  .post(verifyRole(["writer", "admin"]), createNewPost)
-  .get(getPosts);
+  .route("/articles")
+  .post(verifyRole(["writer", "admin"]), createNewArticle)
+  .get(getArticles);
 router
-  .route("/post/:id")
-  .get(getSinglePost)
-  .patch(verifyRole(["writer", "admin"]), editPost)
-  .delete(verifyRole(["writer", "admin"]), deletePost);
-router.use("/post/:id", commentRouter);
+  .route("/articles/:id")
+  .get(getSingleArticle)
+  .patch(verifyRole(["writer", "admin"]), editArticle)
+  .delete(verifyRole(["writer", "admin"]), deleteArticle);
+router.use("/articles/:id", commentRouter);
 
 export default router;

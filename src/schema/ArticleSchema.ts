@@ -4,19 +4,23 @@ import Joi from "joi";
 const utf8Regex = /[\u0000-\u007F]|[\u0080-\u07FF]|[\u0800-\uFFFF]/;
 
 // Define the Joi schema
-const PostSchema = Joi.object({
+const ArticleSchema = Joi.object({
   title: Joi.string().min(1).max(128).required().messages({
     "string.min": "Title must be at least 1 characters long",
     "string.max": "Title must be at most 128 characters long",
     "string.empty": "Title is required",
   }),
-  imageUrl: Joi.string().allow(""),
+  metaTitle: Joi.string().min(1).max(64).required().messages({
+    "string.min": "Title must be at least 1 characters long",
+    "string.max": "Title must be at most 64 characters long",
+    "string.empty": "A meta title is required",
+  }),
   summary: Joi.string().allow(""),
-  postBody: Joi.string().min(1).max(2000).required().messages({
+  articleBody: Joi.string().min(1).max(2000).required().messages({
     "any.empty": "Body is required",
     "any.min": "Body must be at least 1 characters long",
     "any.max": "Body must be less than 2000 characters long",
   }),
 });
 
-export { PostSchema };
+export { ArticleSchema };

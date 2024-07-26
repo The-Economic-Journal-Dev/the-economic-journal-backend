@@ -1,10 +1,10 @@
 import { StatusCodes } from "http-status-codes";
-import { PostSchema } from "../schema/PostSchema";
+import { ArticleSchema } from "../schema/ArticleSchema";
 
 // Function to validate the request body
-const validatePost = (body: any) => {
-  console.log("validatePost started");
-  const { error } = PostSchema.validate(body, { abortEarly: false });
+const validateArticle = (body: any) => {
+  console.log("validateArticle started");
+  const { error } = ArticleSchema.validate(body, { abortEarly: false });
 
   if (error) {
     const errorMessages = error.details
@@ -17,7 +17,7 @@ const validatePost = (body: any) => {
     };
   }
 
-  console.log("validatePost finished");
+  console.log("validateArticle finished");
   return {
     status: StatusCodes.OK,
     success: true,
@@ -25,4 +25,4 @@ const validatePost = (body: any) => {
   };
 };
 
-export { validatePost };
+export { validateArticle };

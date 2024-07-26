@@ -1,14 +1,14 @@
 import { StatusCodes } from "http-status-codes";
 import { CommentModel, IComment } from "../models/CommentModel";
 import { Request, Response } from "express";
-import { PostModel, IPost } from "../models/PostModel";
+import { ArticleModel, IArticle } from "../models/ArticleModel";
 import { authenticateFirebaseId } from "../auth/authenticate-firebase-cred";
 
 // TODO: put all session blocks/guard in a reusesable util function that can accept role restrictions
 const createNewComment = [
   authenticateFirebaseId,
   async (req: Request, res: Response) => {
-    const postId = req.params.postId;
+    const articleId = req.params.articleId;
     const { content, targetId } = req.body;
     const userId = (req.user as any)._id;
 
@@ -20,14 +20,14 @@ const createNewComment = [
       return throwError("Comment content is required", StatusCodes.BAD_REQUEST);
     }
 
-    const postExists = await PostModel.exists({ _id: postId });
+    const articleExists = await ArticleModel.exists({ _id: articleId });
 
-    if (!postExists) {
-      return throwError("Post not found", StatusCodes.NOT_FOUND);
+    if (!articleExists) {
+      return throwError("Article not found", StatusCodes.NOT_FOUND);
     }
 
     const newComment: IComment = new CommentModel({
-      postId: postId,
+      articleId: articleId,
       userId: userId,
       parentCommentId: targetId,
       content,

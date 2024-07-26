@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= article.metaTitle %>
+    </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .article {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .article img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .article h1 {
+            margin-top: 0;
+        }
+
+        .article .meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .article .category {
+            display: inline-block;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="article">
+        <h1>
+            <%= article.title %>
+        </h1>
+        <p class="meta">
+            <span class="author">By <%= article.authorUid %></span> |
+            <span class="date">
+                <%= new Date(article.datePublished).toLocaleDateString() %>
+            </span> |
+            <span class="category">
+                <%= article.category %>
+            </span>
+        </p>
+        <% if (article.imageUrl) { %>
+            <img src="<%= article.imageUrl %>" alt="<%= article.metaTitle %>">
+            <% } %>
+                <p>
+                    <%= article.summary %>
+                </p>
+                <div class="content">
+                    <%- article.articleBody %>
+                </div>
+    </div>
+</body>
+
+</html>

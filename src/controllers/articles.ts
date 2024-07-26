@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { PostModel, IPost } from "../models/PostModel";
-import { validatePost } from "../utils/post-validator";
+import { ArticleModel, IArticle } from "../models/ArticleModel";
+import { validateArticle } from "../utils/article-validator";
 import {
   uploadFileToS3,
   deleteFileFromS3,
@@ -8,7 +8,8 @@ import {
 import { StatusCodes } from "http-status-codes";
 import upload from "../config/multer-config";
 import axios from "axios";
-import { verifyRole } from "../auth/authenticate-firebase-cred";
+import ejs from "ejs";
+import sanitizeHtml from "sanitize-html";
 
 // Define the types for files
 interface MulterFiles {
@@ -25,7 +26,8 @@ function isAcceptedMimetype(mimetype: string): boolean {
   return acceptedImagePattern.test(mimetype);
 }
 
-const createNewPost = [
+// VerifyRole has been defined as a middleware before this so req.user is populated
+const createNewArticle = [
   upload.fields([
     {
       name: "image",
@@ -33,11 +35,25 @@ const createNewPost = [
     },
   ]),
   async (req: Request, res: Response) => {
-    const { title, summary, postBody } = req.body;
+    const { title, summary, articleBody, metaTitle, category } = req.body;
 
     const files = req.files as MulterFiles;
 
-    const authorId = (req.user as any)._id; // req.user as any because the fucking type declaration won't work
+    const authorUid = req.user!.uid;
+
+    const articleValidationResult = validateArticle({
+      title,
+      metaTitle,
+      summary,
+      articleBody,
+    });
+
+    if (!articleValidationResult.success) {
+      throwError(
+        articleValidationResult.message,
+        articleValidationResult.status,
+      );
+    }
 
     let imageUrl = "";
     const image = files["image"][0];
@@ -51,91 +67,97 @@ const createNewPost = [
       imageUrl = await uploadFileToS3(image);
     }
 
-    const postValidationResult = validatePost({
+    const newArticle = new ArticleModel({
+      authorUid,
       title,
       imageUrl,
       summary,
-      postBody,
+      articleBody,
     });
 
-    if (!postValidationResult.success) {
-      throwError(postValidationResult.message, postValidationResult.status);
-    }
+    // Sanitize the title and other fields to prevent XSS attacks
+    const sanitizedTitle = sanitizeHtml(title, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+    const sanitizedSummary = sanitizeHtml(summary);
+    const sanitizedArticleBody = sanitizeHtml(articleBody);
+    const sanitizedMetaTitle = encodeURIComponent(
+      sanitizeHtml(metaTitle, {
+        allowedTags: [],
+        allowedAttributes: {},
+      }),
+    );
+    const sanitizeCategory = sanitizeHtml(category, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
 
-    const newPost = new PostModel({
-      authorId,
-      title,
+    // Render the article HTML using EJS template
+    const html = await ejs.renderFile("../templates/article.ejs", {
+      title: sanitizedTitle,
+      authorUid,
+      metaTitle: sanitizedMetaTitle,
       imageUrl,
-      summary,
-      postBody,
+      summary: sanitizedSummary,
+      articleBody: sanitizedArticleBody,
+      category: sanitizeCategory,
+      datePublished: newArticle.datePublished,
     });
 
-    await newPost.save();
+    await newArticle.save();
 
     res.status(201).json({
       success: true,
-      message: "Post created successfully",
-      post: newPost,
+      message: "Article created successfully",
+      article: newArticle,
     });
   },
 ];
 
-// TODO: change the includeComments to use document.populate() for getting the comments instead
-const getPosts = async (req: Request, res: Response) => {
+// TODO: add comments support
+const getArticles = async (req: Request, res: Response) => {
   const options = req.body;
-  const {
-    pageNumber = 1,
-    count = 20,
-    includeBody = false,
-    includeComments = false,
-  } = options;
+  const { pageNumber = 1, count = 20, includeBody = false } = options;
 
   // Calculate how many documents to skip
   const skipCount = (pageNumber - 1) * count;
 
-  let query = PostModel.find()
+  let query = ArticleModel.find()
     .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
     .skip(skipCount) // Skip documents to implement pagination
     .limit(count); // Limit the number of documents returned per page;
 
-  // Optionally select postBody field based on includeBody flag
+  // Optionally select articleBody field based on includeBody flag
   if (includeBody) {
-    query = query.select("postBody");
+    query = query.select("articleBody");
   }
 
-  if (includeComments) {
-    query = query.select("comments").populate({
-      path: "comments.userId",
-      select: "username -_id", // Select only the username field and exclude _id
-      model: "User", // Assuming your User model is named 'User'
-    });
-  }
-
-  const posts: IPost[] = await query.exec();
+  const articles: IArticle[] = await query.exec();
 
   res.json({
     success: true,
-    message: "Posts fetched successfully",
-    posts,
+    message: "Articles fetched successfully",
+    articles,
   });
 };
 
-const getSinglePost = async (req: Request, res: Response) => {
-  const { id: postId } = req.params;
+const getSingleArticle = async (req: Request, res: Response) => {
+  const { metaTitle } = req.params;
 
-  // Find the post by id
-  const post = await PostModel.findById(postId);
+  // Find the article by id
+  const article = await ArticleModel.findOne({ metaTitle: metaTitle });
 
-  // Check if the post exists
-  if (!post) {
-    throwError("Post not found", 404);
+  // Check if the article exists
+  if (!article) {
+    throwError("Article not found", 404);
   }
 
-  // Return the post
+  // Return the article
   return res.status(200).json({
     success: true,
-    message: "Post fetched successfully",
-    post,
+    message: "Article fetched successfully",
+    article,
   });
 };
 
@@ -159,7 +181,7 @@ function extractImageName(url?: string): string | undefined {
   return undefined;
 }
 
-const editPost = [
+const editArticle = [
   upload.fields([
     {
       name: "image",
@@ -167,8 +189,8 @@ const editPost = [
     },
   ]),
   async (req: Request, res: Response) => {
-    const { title, summary, postBody } = req.body;
-    const { id: postId } = req.params;
+    const { title, summary, articleBody } = req.body;
+    const { id: articleId } = req.params;
 
     const files = req.files as MulterFiles;
 
@@ -179,12 +201,12 @@ const editPost = [
     }
 
     try {
-      // Find the post by id
-      const post = await PostModel.findById(postId);
+      // Find the article by id
+      const article = await ArticleModel.findById(articleId);
 
-      // Check if the post exists
-      if (post) {
-        purgeCloudflarePostsCache(post._id);
+      // Check if the article exists
+      if (article) {
+        purgeCloudflareArticlesCache(article._id);
 
         let imageUrl = "";
         if ((req.files as MulterFiles)["image"]) {
@@ -197,42 +219,45 @@ const editPost = [
               );
             }
 
-            let url = post?.imageUrl;
+            let url = article?.imageUrl;
 
             // Replace the old image with the new one in the S3 bucket
             imageUrl = await uploadFileToS3(image, extractImageName(url));
           }
         }
-        const postValidationResult = validatePost({
+        const articleValidationResult = validateArticle({
           title,
           imageUrl,
           summary,
-          postBody,
+          articleBody,
         });
 
-        if (!postValidationResult.success) {
-          throwError(postValidationResult.message, postValidationResult.status);
+        if (!articleValidationResult.success) {
+          throwError(
+            articleValidationResult.message,
+            articleValidationResult.status,
+          );
         }
 
         if (imageUrl !== "") {
-          post.imageUrl = imageUrl;
+          article.imageUrl = imageUrl;
         }
 
-        const newPost = { title, summary, postBody };
+        const newArticle = { title, summary, articleBody };
 
-        Object.keys(newPost).forEach((key) => {
-          (post as any)[key] = (newPost as any)[key];
+        Object.keys(newArticle).forEach((key) => {
+          (article as any)[key] = (newArticle as any)[key];
         });
 
-        await post.save();
+        await article.save();
       } else {
-        throwError(`No post with id: ${postId} found.`, 404);
+        throwError(`No article with id: ${articleId} found.`, 404);
       }
 
       res.status(201).json({
         success: true,
-        message: `Post with id: ${postId} edited successfully.`,
-        post: post,
+        message: `Article with id: ${articleId} edited successfully.`,
+        article: article,
       });
     } catch (error) {
       throwError(error as Error);
@@ -240,19 +265,22 @@ const editPost = [
   },
 ];
 
-const deletePost = [
+const deleteArticle = [
   async (req: Request, res: Response) => {
     try {
-      const { id: postId } = req.params;
+      const { id: articleId } = req.params;
 
-      const post = await PostModel.findOneAndDelete({ _id: postId });
+      const article = await ArticleModel.findOneAndDelete({ _id: articleId });
 
-      if (!post) {
-        throwError(`No post with id: ${postId} found.`, StatusCodes.NOT_FOUND);
+      if (!article) {
+        throwError(
+          `No article with id: ${articleId} found.`,
+          StatusCodes.NOT_FOUND,
+        );
       }
 
-      // Delete the image associated with the post from the S3 bucket
-      const url = post.imageUrl;
+      // Delete the image associated with the article from the S3 bucket
+      const url = article.imageUrl;
       if (url) {
         const key = extractImageName(url);
         if (key) {
@@ -265,12 +293,12 @@ const deletePost = [
         }
       }
 
-      purgeCloudflarePostsCache(post._id);
+      purgeCloudflareArticlesCache(article._id);
 
       return res.status(200).json({
         success: true,
-        message: `Post with id: ${postId} deleted.`,
-        post: null,
+        message: `Article with id: ${articleId} deleted.`,
+        article: null,
       });
     } catch (error) {
       throwError(error as Error);
@@ -278,63 +306,63 @@ const deletePost = [
   },
 ];
 
-const likePost = async (req: Request, res: Response) => {
-  const postId = req.params.postId;
+const likeArticle = async (req: Request, res: Response) => {
+  const articleId = req.params.articleId;
   const userId = (req.user as any)._id; // Assuming you have user authentication middleware
 
   if (!userId) {
     throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
   }
 
-  const post = await PostModel.findById(postId);
-  if (!post) {
-    return throwError("Post not found", StatusCodes.NOT_FOUND);
+  const article = await ArticleModel.findById(articleId);
+  if (!article) {
+    return throwError("Article not found", StatusCodes.NOT_FOUND);
   }
 
-  // Check if the user has already liked the post
-  if (post.likedBy.includes(userId)) {
-    throwError("You have already liked this post", StatusCodes.BAD_REQUEST);
+  // Check if the user has already liked the article
+  if (article.likedBy.includes(userId)) {
+    throwError("You have already liked this article", StatusCodes.BAD_REQUEST);
   }
 
   // Add the user to the likedBy array
-  post.likedBy.push(userId);
+  article.likedBy.push(userId);
 
-  await post.save();
+  await article.save();
 
   res.status(200).json({
     success: true,
-    message: "Post liked successfully",
-    likes: post.likesCount,
+    message: "Article liked successfully",
+    likes: article.likesCount,
   });
 };
 
-const unlikePost = async (req: Request, res: Response) => {
-  const postId = req.params.postId;
+const unlikeArticle = async (req: Request, res: Response) => {
+  const articleId = req.params.articleId;
   const userId = (req.user as any)._id; // Assuming you have user authentication middleware
 
   if (!userId) {
     throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
   }
 
-  const post = await PostModel.findById(postId);
-  if (!post) {
-    return throwError("Post not found", StatusCodes.NOT_FOUND);
+  const article = await ArticleModel.findById(articleId);
+  if (!article) {
+    return throwError("Article not found", StatusCodes.NOT_FOUND);
   }
 
-  // Check if the user has already liked the post
-  if (!post.likedBy.includes(userId)) {
-    throwError("You have not liked the post", StatusCodes.BAD_REQUEST);
+  // Check if the user has already liked the article
+  if (!article.likedBy.includes(userId)) {
+    throwError("You have not liked the article", StatusCodes.BAD_REQUEST);
   }
 
   // Remove the user from the likedBy array
-  post.likedBy.pull({ _id: userId });
+  article.likedBy.pull({ _id: userId });
 
-  await post.save();
+  await article.save();
 
   res.status(200).json({
     success: true,
-    message: "Post unliked successfully",
-    likes: post.likesCount,
+    message: "Article unliked successfully",
+    likes: article.likesCount,
   });
 };
 
@@ -350,7 +378,7 @@ interface PurgeCacheResponse {
   };
 }
 
-const purgeCloudflarePostsCache = async (postKey: String) => {
+const purgeCloudflareArticlesCache = async (articleKey: String) => {
   if (
     !process.env.CLOUDFLARE_ZONE_ID ||
     !process.env.CLOUDFLARE_CACHE_PURGE_API_TOKEN
@@ -368,9 +396,13 @@ const purgeCloudflarePostsCache = async (postKey: String) => {
     Authorization: `Bearer ${process.env.CLOUDFLARE_CACHE_PURGE_API_TOKEN}`,
   };
   const data = {
-    prefixes: [`www.derpdevstuffs.org/posts${postKey ? `/${postKey}` : ""}`],
+    prefixes: [
+      `www.derpdevstuffs.org/articles${articleKey ? `/${articleKey}` : ""}`,
+    ],
   };
-  const response: PurgeCacheResponse = await axios.post(url, data, { headers });
+  const response: PurgeCacheResponse = await axios.post(url, data, {
+    headers,
+  });
 
   if (response.success) {
     logger.info("Cloudflare cache purged successfully");
@@ -384,11 +416,11 @@ const purgeCloudflarePostsCache = async (postKey: String) => {
 };
 
 export {
-  createNewPost,
-  getPosts,
-  getSinglePost,
-  editPost,
-  deletePost,
-  likePost,
-  unlikePost,
+  createNewArticle,
+  getArticles,
+  getSingleArticle,
+  editArticle,
+  deleteArticle,
+  likeArticle,
+  unlikeArticle,
 };
