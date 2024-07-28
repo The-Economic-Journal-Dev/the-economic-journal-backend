@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ArticleModel, IArticle } from "../models/ArticleModel";
 import { validateArticle } from "../utils/article-validator";
 import {
@@ -30,6 +30,18 @@ function isAcceptedMimetype(mimetype: string): boolean {
 
 // VerifyRole has been defined as a middleware before this so req.user is populated
 const createNewArticle = [
+  async (req: Request, res: Response, next: NextFunction) => {
+    if (process.env.NODE_ENV !== "production") {
+      next();
+    }
+    // Configure CORS for this specific ruote to be available from dash.derpdevstuff.org
+    const allowedDomains = ["dash.derpdevstuffs.org"];
+    const origin = req.get("origin");
+
+    if (allowedDomains.includes(origin!)) {
+      res.set("Access-Control-Allow-Origin", origin);
+    }
+  },
   upload.fields([
     {
       name: "image",

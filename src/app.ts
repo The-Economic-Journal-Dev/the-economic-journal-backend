@@ -17,7 +17,13 @@ import cors from "cors";
 
 // Use Helmet!
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://www.derpdevstuffs.org", "https://derpdevstuffs.org"],
+    optionsSuccessStatus: 200,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Middlewares to parse requests
 app.use(express.json());
