@@ -11,6 +11,7 @@ import axios from "axios";
 import ejs from "ejs";
 import sanitizeHtml from "sanitize-html";
 import path from "path";
+import { RequestParams } from "nodemailer/lib/xoauth2";
 
 // Define the types for files
 interface MulterFiles {
@@ -36,7 +37,7 @@ const createNewArticle = [
     },
   ]),
   async (req: Request, res: Response) => {
-    const { title, summary, articleBody, metaTitle, category, position } =
+    const { title, metaTitle, category, summary, articleBody, position } =
       req.body;
 
     const files = req.files as MulterFiles;
@@ -131,25 +132,40 @@ const createNewArticle = [
   },
 ];
 
+interface GetArticleQuery {
+  pageNumber?: string;
+  count?: string;
+  includeBody?: string;
+}
+
 // TODO: add comments support
-const getArticles = async (req: Request, res: Response) => {
-  const options = req.body;
-  const { pageNumber = 1, count = 20, includeBody = false } = options;
+const getArticles = async (
+  req: Request<{}, {}, {}, GetArticleQuery>,
+  res: Response,
+) => {
+  const { query } = req;
+  const pageNumber = parseInt(query.pageNumber || "1");
+  const count = parseInt(query.count || "20");
+  const includeBody = query.includeBody === "true";
+
+  // Ensure positive integers for pageNumber and count
+  const validatedPageNumber = Math.max(1, Math.floor(pageNumber));
+  const validatedCount = Math.max(1, Math.floor(count));
 
   // Calculate how many documents to skip
-  const skipCount = (pageNumber - 1) * count;
+  const skipCount = (validatedPageNumber - 1) * count;
 
-  let query = ArticleModel.find()
+  let articleDbQuery = ArticleModel.find()
     .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
     .skip(skipCount) // Skip documents to implement pagination
-    .limit(count); // Limit the number of documents returned per page;
+    .limit(validatedCount); // Limit the number of documents returned per page;
 
   // Optionally select articleBody field based on includeBody flag
   if (includeBody) {
-    query = query.select("articleBody");
+    articleDbQuery = articleDbQuery.select("articleBody");
   }
 
-  const articles: IArticle[] = await query.exec();
+  const articles: IArticle[] = await articleDbQuery.exec();
 
   res.json({
     success: true,
