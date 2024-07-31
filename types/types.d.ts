@@ -15,7 +15,6 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        _id?: string; // Using string because Mongoose converts ObjectId to string
         uid: string;
         role: string;
         __v?: number;

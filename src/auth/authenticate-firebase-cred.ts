@@ -38,7 +38,7 @@ const verifyRole = (requiredRole: String[]) => {
     authenticateFirebaseId,
     (req: Request, res: Response, next: NextFunction) => {
       if (!req.user) {
-        return throwError(
+        throwError(
           "Unauthorized: User not authenticated",
           StatusCodes.UNAUTHORIZED,
         );
