@@ -9,6 +9,7 @@ import express, { Request, Response } from "express"; // Import Express
 const app = express(); // Create an Express application
 
 import connectToDB from "./db/connect"; // Import the database connection function
+import { initializeCache } from "./utils/cache-utils";
 
 import { authenticateFirebaseId } from "./auth/authenticate-firebase-cred";
 import apiRoutes from "./routes/apiRoutes"; // Import the main routes serving the HTML
@@ -28,9 +29,6 @@ app.use(
 // Middlewares to parse requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Connect to mongo db
-connectToDB(process.env.MONGO_URI!);
 
 // Routes
 app.get("/", async (req, res) => {
@@ -66,7 +64,22 @@ app.use("/", apiRoutes);
 
 app.use(errorHandler);
 
-const port = process.env.SERVER_PORT || 3000; // Set the port from the environment variable or default to 3000
-app.listen(port, () => {
-  console.log(`Server is running on port ${port} on ${process.env.NODE_ENV}`);
-});
+const startApp = async () => {
+  // Connect to mongo db
+  connectToDB(process.env.MONGO_URI!);
+
+  // Ensure cache is initialized
+  await initializeCache();
+
+  // Your existing Express setup and route handlers here
+
+  const port = process.env.SERVER_PORT || 3000; // Set the port from the environment variable or default to 3000
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port} on ${process.env.NODE_ENV}`);
+  });
+};
+
+// Immediately invoked async function expression (IIFE) to handle top-level await
+(async () => {
+  await startApp();
+})();
