@@ -9,23 +9,28 @@ import {
   getSingleArticle,
   editArticle,
   deleteArticle,
+  likeArticle,
+  unlikeArticle,
 } from "../controllers/articles";
-import { createNewComment, deleteComment } from "../controllers/comments";
 
-const commentRouter = express.Router();
-commentRouter.route("/comments").post(createNewComment).delete(deleteComment);
+const likesRouter = express.Router();
+likesRouter
+  .route("/like")
+  .all(authenticateFirebaseId)
+  .post(likeArticle)
+  .delete(unlikeArticle);
 
 const router = express.Router();
 
 router
   .route("/articles")
-  .post(createNewArticle) // verifyRole(["writer", "admin"])
+  .post(verifyRole(["writer", "admin"]), createNewArticle)
   .get(getArticles);
 router
   .route("/articles/:id")
   .get(getSingleArticle)
   .patch(verifyRole(["writer", "admin"]), editArticle)
   .delete(verifyRole(["writer", "admin"]), deleteArticle);
-router.use("/articles/:id", commentRouter);
+router.use("/articles/:id", likesRouter);
 
 export default router;

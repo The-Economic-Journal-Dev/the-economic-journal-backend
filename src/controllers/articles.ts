@@ -12,6 +12,7 @@ import ejs from "ejs";
 import sanitizeHtml from "sanitize-html";
 import path from "path";
 import { RequestParams } from "nodemailer/lib/xoauth2";
+import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
 
 // Define the types for files
 interface MulterFiles {
@@ -165,7 +166,7 @@ const getArticles = async (
   const validatedCount = Math.max(1, Math.floor(count));
 
   // Calculate how many documents to skip
-  const skipCount = (validatedPageNumber - 1) * count;
+  const skipCount = (validatedPageNumber - 1) * validatedCount;
 
   let articleDbQuery = ArticleModel.find()
     .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
@@ -187,10 +188,10 @@ const getArticles = async (
 };
 
 const getSingleArticle = async (req: Request, res: Response) => {
-  const { metaTitle } = req.params;
+  const { id } = req.params;
 
   // Find the article by id
-  const article = await ArticleModel.findOne({ metaTitle: metaTitle });
+  const article = await ArticleModel.findById(id);
 
   // Check if the article exists
   if (!article) {
@@ -238,7 +239,7 @@ const editArticle = [
 
     const files = req.files as MulterFiles;
 
-    const editorId = (req.user as any)._id; // req.user as any because the fucking type declaration won't work
+    const editorId = req.user?.uid; // req.user? because the fucking type declaration won't work
 
     if (!editorId) {
       throwError("The request doesn't have an id", StatusCodes.BAD_REQUEST);
@@ -250,7 +251,7 @@ const editArticle = [
 
       // Check if the article exists
       if (article) {
-        purgeCloudflareArticlesCache(article._id);
+        purgeCloudflareArticlesCache(article.metaTitle);
 
         let imageUrl = "";
         if ((req.files as MulterFiles)["image"]) {
@@ -263,10 +264,16 @@ const editArticle = [
               );
             }
 
-            let url = article?.imageUrl;
+            const url = article?.imageUrl;
+            const imageName = extractImageName(url);
+            if (!imageName) {
+              throwError("Couldn't extract image name");
+            }
 
             // Replace the old image with the new one in the S3 bucket
-            imageUrl = await uploadFileToS3(image, extractImageName(url));
+            imageUrl = await uploadFileToS3(image, imageName);
+
+            purgeCloudflareImagesCache(imageName);
           }
         }
         const articleValidationResult = validateArticle({
@@ -337,7 +344,7 @@ const deleteArticle = [
         }
       }
 
-      purgeCloudflareArticlesCache(article._id);
+      purgeCloudflareArticlesCache(article.metaTitle);
 
       return res.status(200).json({
         success: true,
@@ -351,8 +358,8 @@ const deleteArticle = [
 ];
 
 const likeArticle = async (req: Request, res: Response) => {
-  const articleId = req.params.articleId;
-  const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+  const articleId = req.params.id;
+  const userId = req.user?.uid; // Assuming you have user authentication middleware
 
   if (!userId) {
     throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
@@ -360,7 +367,7 @@ const likeArticle = async (req: Request, res: Response) => {
 
   const article = await ArticleModel.findById(articleId);
   if (!article) {
-    return throwError("Article not found", StatusCodes.NOT_FOUND);
+    throwError("Article not found", StatusCodes.NOT_FOUND);
   }
 
   // Check if the user has already liked the article
@@ -381,8 +388,8 @@ const likeArticle = async (req: Request, res: Response) => {
 };
 
 const unlikeArticle = async (req: Request, res: Response) => {
-  const articleId = req.params.articleId;
-  const userId = (req.user as any)._id; // Assuming you have user authentication middleware
+  const articleId = req.params.id;
+  const userId = req.user?.uid; // Assuming you have user authentication middleware
 
   if (!userId) {
     throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
@@ -390,7 +397,7 @@ const unlikeArticle = async (req: Request, res: Response) => {
 
   const article = await ArticleModel.findById(articleId);
   if (!article) {
-    return throwError("Article not found", StatusCodes.NOT_FOUND);
+    throwError("Article not found", StatusCodes.NOT_FOUND);
   }
 
   // Check if the user has already liked the article
@@ -399,7 +406,7 @@ const unlikeArticle = async (req: Request, res: Response) => {
   }
 
   // Remove the user from the likedBy array
-  article.likedBy.pull({ _id: userId });
+  article.likedBy.pull({ uid: userId });
 
   await article.save();
 
@@ -411,52 +418,21 @@ const unlikeArticle = async (req: Request, res: Response) => {
 };
 
 /**
- * Represents the result of a cache purge request to Cloudflare.
+ * Wrapper for purgeCloudflareCacheByPrefix function solely for use with articles
+ * @param articleKey the name of the article to purge
  */
-interface PurgeCacheResponse {
-  errors: any[]; // Array of error messages, if any
-  messages: any[]; // Array of messages, if any
-  success: boolean; // Indicates whether the request was successful
-  result: {
-    id: string; // The ID of the purge request
-  };
-}
-
 const purgeCloudflareArticlesCache = async (articleKey: String) => {
-  if (
-    !process.env.CLOUDFLARE_ZONE_ID ||
-    !process.env.CLOUDFLARE_CACHE_PURGE_API_TOKEN
-  ) {
-    logger.error(
-      "Missing Cloudflare credentials: CLOUDFLARE_ZONE_ID or CLOUDFLARE_CACHE_PURGE_API_TOKEN",
-    );
-    throwError();
-  }
+  purgeCloudflareCacheByPrefix(
+    `/articles${articleKey ? `/${articleKey}` : ""}`,
+  );
+};
 
-  // Define the Cloudflare API endpoint and headers
-  const url = `https://api.cloudflare.com/client/v4/zones/${process.env.CLOUDFLARE_ZONE_ID}/purge_cache`;
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${process.env.CLOUDFLARE_CACHE_PURGE_API_TOKEN}`,
-  };
-  const data = {
-    prefixes: [
-      `www.derpdevstuffs.org/articles${articleKey ? `/${articleKey}` : ""}`,
-    ],
-  };
-  const response: PurgeCacheResponse = await axios.post(url, data, {
-    headers,
-  });
-
-  if (response.success) {
-    logger.info("Cloudflare cache purged successfully");
-    return response;
-  } else {
-    logger.error(
-      `Failed to purge Cloudflare cache: ${JSON.stringify(response.errors)}`,
-    );
-    throwError();
-  }
+/**
+ * Wrapper for purgeCloudflareCacheByPrefix function solely for use with articles
+ * @param imageKey the name of the image to purge
+ */
+const purgeCloudflareImagesCache = async (imageKey: String) => {
+  purgeCloudflareCacheByPrefix(`/${imageKey}`, `images.${process.env.DOMAIN}`);
 };
 
 export {

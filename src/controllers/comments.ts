@@ -13,17 +13,17 @@ const createNewComment = [
     const userId = (req.user as any)._id;
 
     if (!userId) {
-      return throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+      throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
     }
 
     if (!content) {
-      return throwError("Comment content is required", StatusCodes.BAD_REQUEST);
+      throwError("Comment content is required", StatusCodes.BAD_REQUEST);
     }
 
     const articleExists = await ArticleModel.exists({ _id: articleId });
 
     if (!articleExists) {
-      return throwError("Article not found", StatusCodes.NOT_FOUND);
+      throwError("Article not found", StatusCodes.NOT_FOUND);
     }
 
     const newComment: IComment = new CommentModel({
