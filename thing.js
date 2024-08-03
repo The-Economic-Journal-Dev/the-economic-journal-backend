@@ -4,15 +4,19 @@ const cache = new NodeCache({ stdTTL: 3600, useClones: false });
 const express = require("express");
 const app = express();
 
-const testData = [
-  { id: "a", body: "1" },
-  { id: "b", body: "2" },
-  { id: "c", body: "3" },
-  { id: "d", body: "4" },
-  { id: "e", body: "5" },
-  { id: "f", body: "6" },
-  { id: "g", body: "7" },
-];
+function generateTestData(count = 100) {
+  const testData = [];
+  for (let i = 0; i < count; i++) {
+    const id = String.fromCharCode(97 + (i % 26)) + Math.floor(i / 26);
+    testData.push({
+      id: id,
+      body: (i + 1).toString(),
+    });
+  }
+  return testData;
+}
+
+const testData = generateTestData();
 
 const getData = async () => {
   const data = await timersPromises.setTimeout(500, testData);
@@ -20,24 +24,11 @@ const getData = async () => {
 };
 
 const arrayToJson = async (array) => {
-  let string = "{";
-  await array.forEach((json) => {
-    string += `"${json.id}": ${JSON.stringify(json)},`;
-  });
-  string = string.slice(0, string.length - 1);
-  string += "}";
-  return await JSON.parse(string);
+  return Object.fromEntries(array.map((json) => [json.id, json]));
 };
 
 const jsonToArray = async (json) => {
-  let array = [];
-  JSON.stringify(json, (key, value) => {
-    if (typeof value === typeof {} && key !== "") {
-      array.push(value);
-    }
-    return value;
-  });
-  return array;
+  return Object.values(json);
 };
 
 const initCache = async () => {

@@ -13,6 +13,7 @@ import sanitizeHtml from "sanitize-html";
 import path from "path";
 import { RequestParams } from "nodemailer/lib/xoauth2";
 import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
+import { retrieveCachedArticles } from "../utils/cache-utils";
 
 // Define the types for files
 interface MulterFiles {
@@ -146,7 +147,7 @@ const createNewArticle = [
 ];
 
 interface GetArticleQuery {
-  pageNumber?: string;
+  page?: string;
   count?: string;
   includeBody?: string;
 }
@@ -157,29 +158,37 @@ const getArticles = async (
   res: Response,
 ) => {
   const { query } = req;
-  const pageNumber = parseInt(query.pageNumber || "1");
+  const page = parseInt(query.page || "1");
   const count = parseInt(query.count || "20");
-  const includeBody = query.includeBody === "true";
+  // const includeBody = query.includeBody === "true";
 
   // Ensure positive integers for pageNumber and count
-  const validatedPageNumber = Math.max(1, Math.floor(pageNumber));
+  const validatedPageNumber = Math.max(1, Math.floor(page));
   const validatedCount = Math.max(1, Math.floor(count));
 
-  // Calculate how many documents to skip
-  const skipCount = (validatedPageNumber - 1) * validatedCount;
+  let { articles, cacheStatus } = await retrieveCachedArticles(
+    validatedPageNumber,
+    validatedCount,
+  );
 
-  let articleDbQuery = ArticleModel.find()
-    .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
-    .skip(skipCount) // Skip documents to implement pagination
-    .limit(validatedCount); // Limit the number of documents returned per page;
+  if (!articles) {
+    // Calculate how many documents to skip
+    const skipCount = (validatedPageNumber - 1) * validatedCount;
 
-  // Optionally select articleBody field based on includeBody flag
-  if (includeBody) {
-    articleDbQuery = articleDbQuery.select("articleBody");
+    let articleDbQuery = ArticleModel.find()
+      .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
+      .skip(skipCount) // Skip documents to implement pagination
+      .limit(validatedCount); // Limit the number of documents returned per page;
+
+    // Optionally select articleBody field based on includeBody flag
+    // if (includeBody) {
+    //   articleDbQuery = articleDbQuery.select("articleBody");
+    // }
+
+    articles = await articleDbQuery.exec();
   }
 
-  const articles: IArticle[] = await articleDbQuery.exec();
-
+  res.setHeader("X-Cache-Status", cacheStatus);
   res.json({
     success: true,
     message: "Articles fetched successfully",
