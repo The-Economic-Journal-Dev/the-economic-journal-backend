@@ -76,7 +76,7 @@ const createNewArticle = [
 
     let imageUrl = "";
     const images = files["image"];
-    console.log(images);
+
     if (images) {
       const image = images[0];
       if (!isAcceptedMimetype(image.mimetype)) {
@@ -222,7 +222,7 @@ const getSingleArticle = async (req: Request, res: Response) => {
  */
 function extractImageName(url?: string): string | undefined {
   const prefix = process.env.CLOUDFRONT_URI + "/";
-  console.log(prefix);
+
   if (prefix) {
     if (url?.startsWith(prefix)) {
       return url.replace(prefix, "");

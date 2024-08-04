@@ -75,7 +75,7 @@ const startApp = async () => {
 
   const port = process.env.SERVER_PORT || 3000; // Set the port from the environment variable or default to 3000
   app.listen(port, () => {
-    console.log(`Server is running on port ${port} on ${process.env.NODE_ENV}`);
+    logger.info(`Server is running on port ${port} on ${process.env.NODE_ENV}`);
   });
 };
 
