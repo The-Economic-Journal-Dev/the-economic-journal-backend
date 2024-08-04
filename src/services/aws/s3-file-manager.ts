@@ -86,10 +86,10 @@ const uploadFileToS3Service = async (
 
     // Await the completion of the upload
     await parallelUploads3.done();
-    console.log(`File uploaded successfully to ${config.Bucket}/${config.Key}`);
+    logger.info(`File uploaded successfully to ${config.Bucket}/${config.Key}`);
   } catch (error) {
-    console.error("Error uploading file:", error);
-    throw error;
+    logger.error("Error uploading file to Bucket");
+    throwError(`Error uploading file ${config.Key} to Bucket`);
   }
 };
 
@@ -104,10 +104,10 @@ const deleteFileFromS3Service = async (
 
   await s3Client.send(deleteObjectCommand, (error, data) => {
     if (error) {
-      console.log("Error deleting file:", error);
-      throwError(error, StatusCodes.BAD_REQUEST);
+      logger.error("Error deleting file:", error);
+      throwError(`Error deleting file: ${config.Key}`, StatusCodes.BAD_REQUEST);
     }
-    console.log("Success. Object deleted.", data);
+    logger.info("Success. Object deleted.", data);
     return data;
   });
 };
@@ -125,17 +125,17 @@ const uploadFileToS3 = async (
   filename: string | undefined = undefined,
 ): Promise<string> => {
   if (!file) {
-    throw new Error("No file uploaded");
+    throwError("No file uploaded");
   }
 
   try {
-    console.log(`Processing file: ${file.originalname}`);
+    logger.info(`Processing file: ${file.originalname}`);
 
     const ext: string = getExtensionFromMimeType(file.mimetype);
 
     // Generate a unique filename if one is not provided
     if (filename) {
-      console.log(`File name: ${filename} detected`);
+      logger.info(`File name: ${filename} detected`);
     }
     let fileName = filename || generateUniqueImageName(file.fieldname, ext);
 
@@ -152,8 +152,8 @@ const uploadFileToS3 = async (
 
     return `${process.env.CLOUDFRONT_URI!}/${fileName}`;
   } catch (error) {
-    console.log("An error has occurred while uploading file" + error);
-    throwError(error as Error);
+    logger.error("An error has occurred while uploading file" + error);
+    throwError("An error has occurred while uploading file");
   }
 };
 

@@ -3,7 +3,6 @@ import { ArticleSchema } from "../schema/ArticleSchema";
 
 // Function to validate the request body
 const validateArticle = (body: any) => {
-  console.log("validateArticle started");
   const { error } = ArticleSchema.validate(body, { abortEarly: false });
 
   if (error) {
@@ -17,7 +16,6 @@ const validateArticle = (body: any) => {
     };
   }
 
-  console.log("validateArticle finished");
   return {
     status: StatusCodes.OK,
     success: true,
