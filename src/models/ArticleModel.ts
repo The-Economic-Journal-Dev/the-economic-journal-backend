@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
 import { CommentModel, IComment } from "./CommentModel";
+import sanitize from "sanitize-html";
 
 // TypeScript interface to define the schema fields for Article
 interface IArticle extends Document {
@@ -7,9 +8,11 @@ interface IArticle extends Document {
   title: string;
   metaTitle: string;
   datePublished: Date;
+  lastUpdated: Date;
   imageUrl?: string;
   summary?: string;
   articleBody: string;
+  articleText: string;
   category: "Finance" | "Economic" | "Business" | "Entrepreneurship";
   likedBy: Types.Array<Types.ObjectId>;
   likesCount: number;
@@ -36,7 +39,11 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
   },
   datePublished: {
     type: Date,
-    default: Date.now(),
+    default: new Date(),
+  },
+  lastUpdated: {
+    type: Date,
+    default: new Date(),
   },
   position: {
     type: Number,
@@ -53,6 +60,12 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
   articleBody: {
     type: String,
     required: true,
+    select: false,
+    minlength: 1,
+    maxlength: 2000,
+  },
+  articleText: {
+    type: String,
     select: false,
     minlength: 1,
     maxlength: 2000,
@@ -77,6 +90,13 @@ ArticleSchema.index({ category: 1, datePublished: -1 });
 
 // Pre-save hook to update likesCount
 ArticleSchema.pre("save", async function (next) {
+  this.lastUpdated = new Date();
+
+  this.articleText = sanitize(this.articleBody, {
+    allowedTags: [],
+    allowedAttributes: {},
+  });
+
   if (this.isModified("likedBy")) {
     this.likesCount = this.likedBy.length;
   }

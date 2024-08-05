@@ -11,9 +11,9 @@ const ArticleSchema = Joi.object({
     "string.empty": "Title is required",
   }),
   metaTitle: Joi.string().min(1).max(64).required().messages({
-    "string.min": "Title must be at least 1 characters long",
-    "string.max": "Title must be at most 64 characters long",
-    "string.empty": "A meta title is required",
+    "string.min": "metaTitle must be at least 1 characters long",
+    "string.max": "metaTitle must be at most 64 characters long",
+    "string.empty": "A metaTitle is required",
   }),
   summary: Joi.string().allow(""),
   articleBody: Joi.string().min(1).max(2000).required().messages({
