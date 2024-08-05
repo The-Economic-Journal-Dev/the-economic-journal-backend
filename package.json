@@ -8,7 +8,8 @@
     "build": "rimraf ./dist && tsc && npm run copy-assets",
     "start": "pm2 start dist/app.js && firebase deploy --only functions:processSignUp",
     "watch": "tsc -w",
-    "dev": "ts-node-dev --poll --files src/app.ts"
+    "dev": "ts-node-dev --poll --files src/app.ts",
+    "d": "ts-node ./src/controllers/github/article-manager.ts"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
     "helmet": "^7.1.0",
     "http-status-codes": "^2.1.4",
     "joi": "^17.13.1",
+    "jsonwebtoken": "^9.0.2",
     "mime": "^3.0.0",
     "mongodb": "^6.7.0",
     "mongoose": "^5.13.22",
@@ -37,8 +39,7 @@
     "nodemailer": "^6.9.13",
     "pino": "^9.2.0",
     "pm2": "^5.4.2",
-    "sanitize-html": "^2.13.0",
-    "simple-git": "^3.25.0"
+    "sanitize-html": "^2.13.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

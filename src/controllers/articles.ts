@@ -11,7 +11,11 @@ import axios from "axios";
 import ejs from "ejs";
 import sanitizeHtml from "sanitize-html";
 import path from "path";
-import { RequestParams } from "nodemailer/lib/xoauth2";
+import {
+  uploadNewArticle,
+  updateArticle,
+  removeArticle,
+} from "./github/article-manager";
 import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
 import { retrieveCachedArticles } from "../utils/cache-utils";
 
@@ -106,12 +110,12 @@ const createNewArticle = [
     });
     const sanitizedSummary = sanitizeHtml(summary);
     const sanitizedArticleBody = sanitizeHtml(articleBody);
-    const sanitizedMetaTitle = encodeURIComponent(
-      sanitizeHtml(metaTitle, {
-        allowedTags: [],
-        allowedAttributes: {},
-      }),
-    );
+    const sanitizedMetaTitle = sanitizeHtml(metaTitle, {
+      allowedTags: [],
+      allowedAttributes: {},
+    })
+      .replace(/[\s_]+/g, "-") // Replace spaces and underscores with hyphens
+      .replace(/[^a-zA-Z0-9-]/g, ""); // Remove all characters except alphanumeric, hyphens, and underscores,
     const sanitizeCategory = sanitizeHtml(category, {
       allowedTags: [],
       allowedAttributes: {},
@@ -135,6 +139,8 @@ const createNewArticle = [
       path.resolve(__dirname, "../templates/article.ejs"),
       data,
     );
+
+    await uploadNewArticle(newArticle.metaTitle, html);
 
     await newArticle.save();
 
@@ -243,7 +249,7 @@ const editArticle = [
     },
   ]),
   async (req: Request, res: Response) => {
-    const { title, summary, articleBody } = req.body;
+    const { title, metaTitle, summary, articleBody } = req.body;
     const { id: articleId } = req.params;
 
     const files = req.files as MulterFiles;
@@ -260,7 +266,7 @@ const editArticle = [
 
       // Check if the article exists
       if (article) {
-        purgeCloudflareArticlesCache(article.metaTitle);
+        await purgeCloudflareArticlesCache(article.metaTitle);
 
         let imageUrl = "";
         if ((req.files as MulterFiles)["image"]) {
@@ -282,11 +288,12 @@ const editArticle = [
             // Replace the old image with the new one in the S3 bucket
             imageUrl = await uploadFileToS3(image, imageName);
 
-            purgeCloudflareImagesCache(imageName);
+            await purgeCloudflareImagesCache(imageName);
           }
         }
         const articleValidationResult = validateArticle({
           title,
+          metaTitle,
           imageUrl,
           summary,
           articleBody,
@@ -303,11 +310,38 @@ const editArticle = [
           article.imageUrl = imageUrl;
         }
 
-        const newArticle = { title, summary, articleBody };
+        const newArticle = { title, metaTitle, summary, articleBody };
 
-        Object.keys(newArticle).forEach((key) => {
-          (article as any)[key] = (newArticle as any)[key];
+        // Sanitize the title and other fields to prevent XSS attacks
+        const sanitizedTitle = sanitizeHtml(title, {
+          allowedTags: [],
+          allowedAttributes: {},
         });
+        const sanitizedSummary = sanitizeHtml(summary);
+        const sanitizedArticleBody = sanitizeHtml(articleBody);
+        const sanitizedMetaTitle = sanitizeHtml(metaTitle, {
+          allowedTags: [],
+          allowedAttributes: {},
+        })
+          .replace(/[\s_]+/g, "-") // Replace spaces and underscores with hyphens
+          .replace(/[^a-zA-Z0-9-]/g, ""); // Remove all characters except alphanumeric, hyphens, and underscores,
+
+        article.title = sanitizedTitle;
+        article.metaTitle = sanitizedMetaTitle;
+        article.summary = sanitizedSummary;
+        article.articleBody = sanitizedArticleBody;
+
+        const data = {
+          article,
+        };
+
+        // Render the article HTML using EJS template
+        const html = await ejs.renderFile(
+          path.resolve(__dirname, "../templates/article.ejs"),
+          data,
+        );
+
+        await updateArticle(article.metaTitle, html);
 
         await article.save();
       } else {
@@ -320,7 +354,8 @@ const editArticle = [
         article: article,
       });
     } catch (error) {
-      throwError(error as Error);
+      logger.error("Error while editing article:", error);
+      throwError("Error while editing article");
     }
   },
 ];
@@ -353,7 +388,8 @@ const deleteArticle = [
         }
       }
 
-      purgeCloudflareArticlesCache(article.metaTitle);
+      await purgeCloudflareArticlesCache(article.metaTitle);
+      await removeArticle(article.metaTitle);
 
       return res.status(200).json({
         success: true,
@@ -431,7 +467,7 @@ const unlikeArticle = async (req: Request, res: Response) => {
  * @param articleKey the name of the article to purge
  */
 const purgeCloudflareArticlesCache = async (articleKey: String) => {
-  purgeCloudflareCacheByPrefix(
+  await purgeCloudflareCacheByPrefix(
     `/articles${articleKey ? `/${articleKey}` : ""}`,
   );
 };
@@ -441,7 +477,10 @@ const purgeCloudflareArticlesCache = async (articleKey: String) => {
  * @param imageKey the name of the image to purge
  */
 const purgeCloudflareImagesCache = async (imageKey: String) => {
-  purgeCloudflareCacheByPrefix(`/${imageKey}`, `images.${process.env.DOMAIN}`);
+  await purgeCloudflareCacheByPrefix(
+    `/${imageKey}`,
+    `images.${process.env.DOMAIN}`,
+  );
 };
 
 export {
