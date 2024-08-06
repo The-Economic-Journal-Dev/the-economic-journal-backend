@@ -7,9 +7,9 @@ import {
 } from "../services/aws/s3-file-manager";
 import { StatusCodes } from "http-status-codes";
 import upload from "../config/multer-config";
-import axios from "axios";
 import ejs from "ejs";
 import sanitizeHtml from "sanitize-html";
+import { UpdateWithAggregationPipeline } from "mongoose";
 import path from "path";
 import {
   uploadNewArticle,
@@ -61,8 +61,7 @@ const createNewArticle = [
     const files = req.files as MulterFiles;
     logger.info(files);
 
-    const authorUid =
-      process.env.NODE_ENV === "development" ? "00000000000001" : req.user!.uid;
+    const authorUid = req.user?.uid;
 
     const articleValidationResult = validateArticle({
       title,
@@ -92,17 +91,6 @@ const createNewArticle = [
       imageUrl = await uploadFileToS3(image);
     }
 
-    const newArticle = new ArticleModel({
-      authorUid,
-      title,
-      metaTitle,
-      category,
-      imageUrl,
-      summary,
-      articleBody,
-      position,
-    });
-
     // Sanitize the title and other fields to prevent XSS attacks
     const sanitizedTitle = sanitizeHtml(title, {
       allowedTags: [],
@@ -119,6 +107,17 @@ const createNewArticle = [
     const sanitizeCategory = sanitizeHtml(category, {
       allowedTags: [],
       allowedAttributes: {},
+    });
+
+    const newArticle = new ArticleModel({
+      authorUid,
+      title: sanitizedTitle,
+      metaTitle: sanitizedMetaTitle,
+      category: sanitizeCategory,
+      imageUrl,
+      summary: sanitizedSummary,
+      articleBody: sanitizedArticleBody,
+      position,
     });
 
     const data = {
@@ -483,6 +482,169 @@ const purgeCloudflareImagesCache = async (imageKey: String) => {
   );
 };
 
+function isValidISOString(dateString: string) {
+  const date = new Date(dateString);
+  return date.toISOString() === dateString;
+}
+
+interface SearchArticlesQuery {
+  page?: string;
+  count?: string;
+  search?: string;
+  category?: string;
+  categories?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+// mongo db aggregation to allow fuzzy text search,
+// date search(start to end, specific date, in the past specific period of time),
+// category and pagination
+const searchArticles = async (
+  req: Request<{}, {}, {}, SearchArticlesQuery>,
+  res: Response,
+) => {
+  const { query } = req;
+  const { search, category, categories, startDate, endDate } = query;
+
+  if (startDate) {
+    if (!isValidISOString(startDate)) {
+      logger.error("Invalid start date format was provided.");
+      throwError("Invalid start date format", StatusCodes.BAD_REQUEST);
+    }
+  }
+
+  if (endDate) {
+    if (!isValidISOString(endDate)) {
+      logger.error("Invalid start date format was provided.");
+      throwError("Invalid start date format", StatusCodes.BAD_REQUEST);
+    }
+  }
+
+  const page = parseInt(query.page || "1");
+  const count = parseInt(query.count || "20");
+
+  // Ensure positive integers for pageNumber and count
+  const validatedPageNumber = Math.max(1, Math.floor(page));
+  const validatedCount = Math.max(1, Math.floor(count));
+
+  const searchAggregation: any[] = [
+    {
+      $search: {
+        index: "article-search",
+        compound: {
+          should: [
+            {
+              autocomplete: {
+                query: search,
+                path: "title",
+                fuzzy: {
+                  maxEdits: 2,
+                  prefixLength: 0,
+                  maxExpansions: 50,
+                },
+              },
+            },
+
+            {
+              autocomplete: {
+                query: search,
+                path: "articleText",
+                fuzzy: {
+                  maxEdits: 2,
+                  prefixLength: 0,
+                  maxExpansions: 50,
+                },
+              },
+            },
+
+            {
+              autocomplete: {
+                query: search,
+                path: "summary",
+                fuzzy: {
+                  maxEdits: 2,
+                  prefixLength: 0,
+                  maxExpansions: 50,
+                },
+              },
+            },
+          ],
+          minimumShouldMatch: 1,
+        },
+      },
+    },
+    ,
+    // Pagination stage
+    {
+      $skip: validatedPageNumber - 1, // Number of documents to skip (pagination offset)
+    },
+    {
+      $limit: validatedCount, // Number of documents to return (pagination limit)
+    },
+  ];
+
+  // Ensure `compound` exists before modifying it
+  const compound = searchAggregation[0]?.$search?.compound;
+
+  if (compound) {
+    if (categories) {
+      // Handle multiple categories (comma-separated)
+      const categoryList = Array.isArray(categories)
+        ? categories
+        : categories.split(",");
+
+      compound.must = [
+        {
+          in: {
+            path: "category",
+            value: categoryList,
+          },
+        },
+      ];
+    } else if (category) {
+      // Handle single category
+      compound.must = [
+        {
+          in: {
+            path: "category",
+            value: [category],
+          },
+        },
+      ];
+    }
+  }
+
+  if (startDate) {
+    searchAggregation.unshift(
+      // Match stage for date range search
+      {
+        $match: {
+          datePublished: {
+            $gte: new Date(startDate), // Start date
+            $lte: endDate ? new Date(endDate) : new Date(), // End date
+          },
+        },
+      },
+    );
+  }
+
+  try {
+    const articles = await ArticleModel.aggregate(searchAggregation);
+
+    res.json({
+      success: true,
+      message: "Articles searched and fetched successfully",
+      articles,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(`Error while searching articles: ${error.message}`);
+      throwError("Error while searching articles");
+    }
+  }
+};
+
 export {
   createNewArticle,
   getArticles,
@@ -491,4 +653,5 @@ export {
   deleteArticle,
   likeArticle,
   unlikeArticle,
+  searchArticles,
 };

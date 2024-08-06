@@ -60,7 +60,7 @@ app.get(
   },
 );
 
-app.use("/", apiRoutes);
+app.use("/articles", apiRoutes);
 
 app.use(errorHandler);
 
