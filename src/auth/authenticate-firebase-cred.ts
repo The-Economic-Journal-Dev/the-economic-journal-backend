@@ -7,6 +7,9 @@ const authenticateFirebaseId = async (
   res: Response,
   next: NextFunction,
 ) => {
+  if (process.env.NODE_ENV !== "production") {
+    next(); // Continue to the next middleware if NODE_ENV is not 'production'
+  }
   const authHeader = req.headers["authorization"];
   let idToken;
 

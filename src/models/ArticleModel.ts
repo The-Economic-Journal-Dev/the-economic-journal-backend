@@ -86,7 +86,7 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
   },
 });
 
-ArticleSchema.index({ category: 1, datePublished: -1 });
+ArticleSchema.index({ category: 1, datePublished: -1, articleText: 1 });
 
 // Pre-save hook to update likesCount
 ArticleSchema.pre("save", async function (next) {
