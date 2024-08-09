@@ -18,15 +18,14 @@ if (process.env.NODE_ENV === "development") {
     },
   });
 } else {
-  // Create a writable stream for the log file
-  const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
-
   logger = pino(
-    {
-      level: "info",
-      redact: ["password", "secret"],
-    },
-    logStream,
+    pino.transport({
+      level: "trace",
+      target: "pino/file",
+      options: {
+        destination: 1,
+      },
+    }),
   );
 }
 
