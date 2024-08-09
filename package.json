@@ -8,7 +8,8 @@
     "build": "rimraf ./dist && tsc && npm run copy-assets",
     "start": "pm2 start dist/app.js && firebase deploy --only functions:processSignUp",
     "watch": "tsc -w",
-    "dev": "ts-node-dev --poll --files src/app.ts"
+    "dev": "ts-node-dev --poll --files src/app.ts",
+    "prod": "set NODE_ENV=production && node dist/app.js"
   },
   "keywords": [],
   "author": "",

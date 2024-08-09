@@ -497,9 +497,6 @@ interface SearchArticlesQuery {
   endDate?: string;
 }
 
-// mongo db aggregation to allow fuzzy text search,
-// date search(start to end, specific date, in the past specific period of time),
-// category and pagination
 const searchArticles = async (
   req: Request<{}, {}, {}, SearchArticlesQuery>,
   res: Response,
