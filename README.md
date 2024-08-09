@@ -4,7 +4,7 @@
 
 ## PLEASE READ THIS BEFORE ANYTHING
 
-#### **Alternatively**, you can use this link `https://the-entrepreneur-website.onrender.com` to use the api but using it after inactivity will take 50s or more to bootup the server (then the response will be faster). But using the docker method down here will be the fastest.
+#### **Alternatively**, you can use this link `api.derpdevstuffs.org` to use the api but using it after inactivity will take 50s or more to bootup the server (then the response will be faster). But using the docker method down here will be the fastest.
 
 ### Steps to start server using docker
 
@@ -454,6 +454,46 @@ Deletes an existing article identified by its ID.
 }
 ```
 
+## Search Articles
+
+Retrieves articles based on various search criteria and pagination parameters.
+
+### Endpoint
+
+`GET /search`
+
+### Query Parameters
+
+| Parameter  | Type    | Description                                           |
+| ---------- | ------- | ----------------------------------------------------- |
+| search     | string  | Search term for article title, text, and summary      |
+| category   | string  | Single category to filter articles                    |
+| categories | string  | Comma-separated list of categories to filter articles |
+| startDate  | string  | ISO date string for the earliest publication date     |
+| endDate    | string  | ISO date string for the latest publication date       |
+| page       | integer | Page number for pagination (default: 1)               |
+| count      | integer | Number of articles per page (default: 20)             |
+
+### Response
+
+#### Success Response
+
+**Code:** 200 OK
+
+**Content example:**
+
+````json
+{
+  "success": true,
+  "message": "Articles searched and fetched successfully",
+  "articles": [
+    {
+      // Article object
+    },
+    // More article objects...
+  ]
+}
+
 ## Create New Comment
 
 ### URL:
@@ -471,7 +511,7 @@ Deletes an existing article identified by its ID.
   "content": "body of the comment", // (string): The text content of the comment
   "targetId": "exampleID" // (string): The id of the target comment to create a comment for. Leave blank or dont provide a target if commenting on a article
 }
-```
+````
 
 ### Response:
 
@@ -508,104 +548,6 @@ Deletes an existing article identified by its ID.
   "success": true,
   "message": "Comment delete successfully",
   "comment": null
-}
-```
-
-# User Profile Endpoints
-
-## Edit User Profile
-
-Updates details of an existing user identified by their ID.
-
-### URL:
-
-`/api/user/:id`
-
-### Method:
-
-`PATCH`
-
-### Path Parameters:
-
-`id (string): ID of the user to retrieve and edit.`
-
-### Request Body:
-
-```json
-{
-  "email": "email@email.com", // (optional): The new email address.
-  "username": "username", // (optional): The new username.
-  "password": "password" // (required): The current password to verify the user's identity.
-}
-```
-
-### Response
-
-```json
-{
-  "success": true,
-  "message": "Profile updated successfully",
-  "user": {
-    // Updated user object
-  }
-}
-```
-
-## Delete User
-
-Delete an existing user identified by their ID.
-
-### URL:
-
-`/api/user/:id`
-
-### Method:
-
-`DELETE`
-
-### Path Parameters:
-
-`id (string): ID of the user to be deleted.`
-
-### Request Body:
-
-```json
-{
-  "password": "password" // (required): The current password to verify the user's identity.
-}
-```
-
-### Response
-
-```json
-{
-  "success": true,
-  "message": "Profile deleted successfully"
-}
-```
-
-## Get User Profile
-
-Get an existing user's profile identified by their ID.
-
-### URL:
-
-`/api/user/:id`
-
-### Method:
-
-`GET`
-
-### Path Parameters:
-
-`id (string): ID of the user to be retrieved.`
-
-### Response
-
-```json
-{
-  "success": true,
-  "message": "Profile retrieved successfully"
 }
 ```
 
