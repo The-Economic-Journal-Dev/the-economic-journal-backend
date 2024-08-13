@@ -21,6 +21,8 @@ import displaySystemSpecs from "./utils/display-vm-specs";
 app.use(helmet());
 
 app.use((req, res, next) => {
+  res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.append("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
   // Allow any origin in development
   if (process.env.NODE_ENV === "development") {
     res.append("Access-Control-Allow-Origin", "*");
@@ -32,8 +34,6 @@ app.use((req, res, next) => {
     ]);
     next();
   }
-  res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-  res.append("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
 });
 
 // Middlewares to parse requests
