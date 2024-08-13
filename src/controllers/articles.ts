@@ -196,7 +196,7 @@ const getArticles = async (
 
     // Optionally select articleBody field based on includeBody flag
     if (includeBody) {
-      articleDbQuery = articleDbQuery.select("articleBody");
+      articleDbQuery = articleDbQuery.select("+articleBody");
     }
 
     articles = await articleDbQuery.exec();
