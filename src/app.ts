@@ -26,11 +26,9 @@ app.use((req, res, next) => {
     "https://derpdevstuffs.org",
   ]);
 
-  const origin = req.get("Origin");
-
-  // Allow any localhost origin (https://localhost:PORT)
-  if (origin && origin.startsWith("https://localhost")) {
-    res.append("Access-Control-Allow-Origin", origin);
+  // Allow any origin in development
+  if (process.env.NODE_ENV === "development") {
+    res.append("Access-Control-Allow-Origin", "*");
   }
 
   res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");

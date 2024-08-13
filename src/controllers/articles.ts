@@ -50,9 +50,9 @@ const createNewArticle = [
 
     // If the request's Origin header matches the allowed domain, set the CORS header
     if (origin === allowedDomain) {
-      res.set("Access-Control-Allow-Origin", allowedDomain);
+      res.append("Access-Control-Allow-Origin", allowedDomain);
     } else {
-      res.set("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
+      res.append("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
     }
 
     next();
