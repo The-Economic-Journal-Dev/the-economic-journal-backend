@@ -33,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.get("/", async (req, res) => {
-  res.json({ success: true });
+  res.json({ success: true, headers: res.header });
 });
 
 app.get(

@@ -207,7 +207,7 @@ const getSingleArticle = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   // Find the article by id
-  const article = await ArticleModel.findById(id);
+  const article = await ArticleModel.findOne({ metaTitle: id });
 
   // Check if the article exists
   if (!article) {
