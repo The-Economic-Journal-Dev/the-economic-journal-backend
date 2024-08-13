@@ -30,14 +30,10 @@ app.use((req, res, next) => {
       "https://www.derpdevstuffs.org",
       "https://derpdevstuffs.org",
     ]);
-
-    res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-    res.append("Access-Control-Allow-Headers", [
-      "Content-Type",
-      "Authorization",
-    ]);
     next();
   }
+  res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.append("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
 });
 
 // Middlewares to parse requests
