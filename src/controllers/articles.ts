@@ -213,7 +213,6 @@ const getArticles = async (
 const getSingleArticle = [
   async (req: Request, res: Response, next: NextFunction) => {
     res.append("Cache-Control", "public, max-age=3600, stale-while-revalidate");
-    console.log("2");
     next();
   },
   async (req: Request, res: Response) => {
@@ -221,14 +220,12 @@ const getSingleArticle = [
 
     // Find the article by id
     const article = await ArticleModel.findOne({ metaTitle: id });
-    console.log("3");
 
     // Check if the article exists
     if (!article) {
       throwError("Article not found", 404);
     }
 
-    console.log("4");
     // Return the article
     return res.status(200).json({
       success: true,
