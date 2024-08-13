@@ -354,6 +354,7 @@ const editArticle = [
         "public, max-age=3600, stale-while-revalidate",
       );
       res.setHeader("Last-Modified", article.lastUpdated.toString());
+      res.setHeader("Access-Control-Allow-Origin", "*");
 
       res.status(201).json({
         success: true,
