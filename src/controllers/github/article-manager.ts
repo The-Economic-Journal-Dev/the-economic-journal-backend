@@ -8,7 +8,6 @@ const owner =
 const repo =
   process.env.DIST_REPO || throwError("You must set DIST_REPO env variable");
 
-// TODO: Make new brnach for prod and review on frontend
 // TODO: go though github REST api docs and enforce best practices
 // LINK: https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api?apiVersion=2022-11-28
 /**
@@ -203,4 +202,4 @@ const removeArticle = async (articleKey: string) => {
     });
 };
 
-export { uploadNewArticle, updateArticle,removeArticle };
+export { uploadNewArticle, updateArticle, removeArticle };
