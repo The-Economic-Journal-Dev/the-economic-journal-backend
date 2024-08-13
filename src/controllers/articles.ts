@@ -219,7 +219,9 @@ const getSingleArticle = [
     const { id } = req.params;
 
     // Find the article by id
-    const article = await ArticleModel.findOne({ metaTitle: id });
+    const article = await ArticleModel.findOne({ metaTitle: id }).select(
+      "articleBody",
+    );
 
     // Check if the article exists
     if (!article) {
