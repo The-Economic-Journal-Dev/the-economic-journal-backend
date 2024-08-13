@@ -220,7 +220,7 @@ const getSingleArticle = [
 
     // Find the article by id
     const article = await ArticleModel.findOne({ metaTitle: id }).select(
-      "articleBody",
+      "+articleBody",
     );
 
     // Check if the article exists
