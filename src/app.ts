@@ -25,6 +25,14 @@ app.use((req, res, next) => {
     "https://www.derpdevstuffs.org",
     "https://derpdevstuffs.org",
   ]);
+
+  const origin = req.get("Origin");
+
+  // Allow any localhost origin (https://localhost:PORT)
+  if (origin && origin.startsWith("https://localhost")) {
+    res.append("Access-Control-Allow-Origin", origin);
+  }
+
   res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
   res.append("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
   next();

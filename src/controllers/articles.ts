@@ -44,6 +44,7 @@ const createNewArticle = [
     }
 
     // Configure CORS for this specific route to be available from dash.derpdevstuffs.org
+    res.removeHeader("Access-Control-Allow-Origin");
     const allowedDomain = "https://dash.derpdevstuffs.org";
     const origin = req.get("Origin");
 
