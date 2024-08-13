@@ -195,14 +195,18 @@ const getArticles = async (
       .limit(validatedCount); // Limit the number of documents returned per page;
 
     // Optionally select articleBody field based on includeBody flag
+    // Always exclude likedBy and articleText
+    let selectString = "-likedBy -articleText";
+
+    // Conditionally include articleBody based on includeBody flag
     if (includeBody) {
-      articleDbQuery = articleDbQuery.select("+articleBody");
+      selectString = "+articleBody " + selectString;
     }
 
-    articles = await articleDbQuery.exec();
+    articles = await articleDbQuery.select(selectString);
   }
 
-  res.setHeader("X-Cache-Status", cacheStatus);
+  res.append("X-Cache-Status", cacheStatus);
   res.json({
     success: true,
     message: "Articles fetched successfully",
@@ -220,7 +224,7 @@ const getSingleArticle = [
 
     // Find the article by id
     const article = await ArticleModel.findOne({ metaTitle: id }).select(
-      "+articleBody",
+      "+articleBody -likedBy -articleText",
     );
 
     // Check if the article exists
