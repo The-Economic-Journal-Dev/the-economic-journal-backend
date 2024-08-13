@@ -24,17 +24,22 @@ app.use((req, res, next) => {
   // Allow any origin in development
   if (process.env.NODE_ENV === "development") {
     res.append("Access-Control-Allow-Origin", "*");
+    console.log("1");
+    next();
+  } else {
+    console.log("_1");
+    res.append("Access-Control-Allow-Origin", [
+      "https://www.derpdevstuffs.org",
+      "https://derpdevstuffs.org",
+    ]);
+
+    res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+    res.append("Access-Control-Allow-Headers", [
+      "Content-Type",
+      "Authorization",
+    ]);
     next();
   }
-
-  res.append("Access-Control-Allow-Origin", [
-    "https://www.derpdevstuffs.org",
-    "https://derpdevstuffs.org",
-  ]);
-
-  res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-  res.append("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
-  next();
 });
 
 // Middlewares to parse requests
