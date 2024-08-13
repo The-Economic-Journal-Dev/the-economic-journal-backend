@@ -21,15 +21,16 @@ import displaySystemSpecs from "./utils/display-vm-specs";
 app.use(helmet());
 
 app.use((req, res, next) => {
+  // Allow any origin in development
+  if (process.env.NODE_ENV === "development") {
+    res.append("Access-Control-Allow-Origin", "*");
+    next();
+  }
+
   res.append("Access-Control-Allow-Origin", [
     "https://www.derpdevstuffs.org",
     "https://derpdevstuffs.org",
   ]);
-
-  // Allow any origin in development
-  if (process.env.NODE_ENV === "development") {
-    res.append("Access-Control-Allow-Origin", "*");
-  }
 
   res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
   res.append("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
