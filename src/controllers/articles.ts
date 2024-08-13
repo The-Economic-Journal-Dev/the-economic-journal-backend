@@ -9,7 +9,6 @@ import { StatusCodes } from "http-status-codes";
 import upload from "../config/multer-config";
 import ejs from "ejs";
 import sanitizeHtml from "sanitize-html";
-import { UpdateWithAggregationPipeline } from "mongoose";
 import path from "path";
 import {
   uploadNewArticle,
@@ -18,6 +17,9 @@ import {
 } from "./github/article-manager";
 import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
 import { retrieveCachedArticles } from "../utils/cache-utils";
+
+// TODO: Tell frontend team to use mammothjs to convert docx file to html in the FRONTEND
+// TODO: Factory out the middleware to follow the DRY principle
 
 // Define the types for files
 interface MulterFiles {
@@ -165,7 +167,7 @@ const getArticles = async (
   const { query } = req;
   const page = parseInt(query.page || "1");
   const count = parseInt(query.count || "20");
-  // const includeBody = query.includeBody === "true";
+  const includeBody = query.includeBody === "true";
 
   // Ensure positive integers for pageNumber and count
   const validatedPageNumber = Math.max(1, Math.floor(page));
@@ -186,9 +188,9 @@ const getArticles = async (
       .limit(validatedCount); // Limit the number of documents returned per page;
 
     // Optionally select articleBody field based on includeBody flag
-    // if (includeBody) {
-    //   articleDbQuery = articleDbQuery.select("articleBody");
-    // }
+    if (includeBody) {
+      articleDbQuery = articleDbQuery.select("articleBody");
+    }
 
     articles = await articleDbQuery.exec();
   }
@@ -346,6 +348,12 @@ const editArticle = [
       } else {
         throwError(`No article with id: ${articleId} found.`, 404);
       }
+
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=3600, stale-while-revalidate",
+      );
+      res.setHeader("Last-Modified", article.lastUpdated.toString());
 
       res.status(201).json({
         success: true,

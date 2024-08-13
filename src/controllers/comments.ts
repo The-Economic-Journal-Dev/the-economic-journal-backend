@@ -4,7 +4,6 @@ import { Request, Response } from "express";
 import { ArticleModel, IArticle } from "../models/ArticleModel";
 import { authenticateFirebaseId } from "../auth/authenticate-firebase-cred";
 
-// TODO: put all session blocks/guard in a reusesable util function that can accept role restrictions
 const createNewComment = [
   authenticateFirebaseId,
   async (req: Request, res: Response) => {
