@@ -24,10 +24,8 @@ app.use((req, res, next) => {
   // Allow any origin in development
   if (process.env.NODE_ENV === "development") {
     res.append("Access-Control-Allow-Origin", "*");
-    console.log("1");
     next();
   } else {
-    console.log("_1");
     res.append("Access-Control-Allow-Origin", [
       "https://www.derpdevstuffs.org",
       "https://derpdevstuffs.org",
