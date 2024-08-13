@@ -19,13 +19,16 @@ import displaySystemSpecs from "./utils/display-vm-specs";
 
 // Use Helmet!
 app.use(helmet());
-app.use(
-  cors({
-    origin: ["https://www.derpdevstuffs.org", "https://derpdevstuffs.org"],
-    optionsSuccessStatus: 200,
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+
+app.use((req, res, next) => {
+  res.append("Access-Control-Allow-Origin", [
+    "https://www.derpdevstuffs.org",
+    "https://derpdevstuffs.org",
+  ]);
+  res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.append("Access-Control-Allow-Headers", ["Content-Type", "Authorization"]);
+  next();
+});
 
 // Middlewares to parse requests
 app.use(express.json());
