@@ -40,15 +40,21 @@ function isAcceptedMimetype(mimetype: string): boolean {
 const createNewArticle = [
   async (req: Request, res: Response, next: NextFunction) => {
     if (process.env.NODE_ENV !== "production") {
-      next();
+      return next(); // Skip CORS setting in non-production environments
     }
-    // Configure CORS for this specific ruote to be available from dash.derpdevstuff.org
-    const allowedDomains = ["dash.derpdevstuffs.org"];
-    const origin = req.get("origin");
 
-    if (allowedDomains.includes(origin!)) {
-      res.set("Access-Control-Allow-Origin", origin);
+    // Configure CORS for this specific route to be available from dash.derpdevstuffs.org
+    const allowedDomain = "https://dash.derpdevstuffs.org";
+    const origin = req.get("Origin");
+
+    // If the request's Origin header matches the allowed domain, set the CORS header
+    if (origin === allowedDomain) {
+      res.set("Access-Control-Allow-Origin", allowedDomain);
+    } else {
+      res.set("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
     }
+
+    next();
   },
   upload.fields([
     {
@@ -203,24 +209,30 @@ const getArticles = async (
   });
 };
 
-const getSingleArticle = async (req: Request, res: Response) => {
-  const { id } = req.params;
+const getSingleArticle = [
+  (req: Request, res: Response, next: NextFunction) => {
+    res.append("Cache-Control", "public, max-age=3600, stale-while-revalidate");
+    next();
+  },
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
 
-  // Find the article by id
-  const article = await ArticleModel.findOne({ metaTitle: id });
+    // Find the article by id
+    const article = await ArticleModel.findOne({ metaTitle: id });
 
-  // Check if the article exists
-  if (!article) {
-    throwError("Article not found", 404);
-  }
+    // Check if the article exists
+    if (!article) {
+      throwError("Article not found", 404);
+    }
 
-  // Return the article
-  return res.status(200).json({
-    success: true,
-    message: "Article fetched successfully",
-    article,
-  });
-};
+    // Return the article
+    return res.status(200).json({
+      success: true,
+      message: "Article fetched successfully",
+      article,
+    });
+  },
+];
 
 /**
  * Extracts the image name from the given URL.
@@ -349,12 +361,7 @@ const editArticle = [
         throwError(`No article with id: ${articleId} found.`, 404);
       }
 
-      res.setHeader(
-        "Cache-Control",
-        "public, max-age=3600, stale-while-revalidate",
-      );
       res.setHeader("Last-Modified", article.lastUpdated.toString());
-      res.setHeader("Access-Control-Allow-Origin", "*");
 
       res.status(201).json({
         success: true,
