@@ -163,7 +163,8 @@ const createNewArticle = [
 interface GetArticleQuery {
   page?: string;
   count?: string;
-  includeBody?: string;
+  includeHTML?: string;
+  includeText?: string;
 }
 
 // TODO: add comments support
@@ -174,7 +175,8 @@ const getArticles = async (
   const { query } = req;
   const page = parseInt(query.page || "1");
   const count = parseInt(query.count || "20");
-  const includeBody = query.includeBody === "true";
+  const includeHTML = query.includeHTML === "true";
+  const includeText = query.includeText === "true";
 
   // Ensure positive integers for pageNumber and count
   const validatedPageNumber = Math.max(1, Math.floor(page));
@@ -196,11 +198,16 @@ const getArticles = async (
 
     // Optionally select articleBody field based on includeBody flag
     // Always exclude likedBy and articleText
-    let selectString = "-likedBy -articleText";
+    let selectString = "-likedBy";
 
     // Conditionally include articleBody based on includeBody flag
-    if (includeBody) {
+    if (includeHTML) {
       selectString = "+articleBody " + selectString;
+    }
+
+    // Conditionally include articleText based on includeText flag
+    if (includeText) {
+      selectString = "+articleText " + selectString;
     }
 
     articles = await articleDbQuery.select(selectString);
