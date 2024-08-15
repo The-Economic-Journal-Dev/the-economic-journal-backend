@@ -41,21 +41,20 @@ const createNewArticle = [
   async (req: Request, res: Response, next: NextFunction) => {
     if (process.env.NODE_ENV !== "production") {
       return next(); // Skip CORS setting in non-production environments
-    }
-
-    // Configure CORS for this specific route to be available from dash.derpdevstuffs.org
-    res.removeHeader("Access-Control-Allow-Origin");
-    const allowedDomain = "https://dash.derpdevstuffs.org";
-    const origin = req.get("Origin");
-
-    // If the request's Origin header matches the allowed domain, set the CORS header
-    if (origin === allowedDomain) {
-      res.append("Access-Control-Allow-Origin", allowedDomain);
     } else {
-      res.append("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
-    }
+      // Configure CORS for this specific route to be available from dash.derpdevstuffs.org
+      res.removeHeader("Access-Control-Allow-Origin");
+      const allowedDomain = "https://dash.derpdevstuffs.org";
+      const origin = req.get("Origin");
 
-    next();
+      // If the request's Origin header matches the allowed domain, set the CORS header
+      if (origin === allowedDomain) {
+        res.append("Access-Control-Allow-Origin", allowedDomain);
+      } else {
+        res.append("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
+      }
+      next();
+    }
   },
   upload.fields([
     {
@@ -119,7 +118,7 @@ const createNewArticle = [
     });
 
     const newArticle = new ArticleModel({
-      authorUid,
+      authorUid: authorUid ? authorUid : "000000001",
       title: sanitizedTitle,
       metaTitle: sanitizedMetaTitle,
       category: sanitizeCategory,
