@@ -56,6 +56,10 @@ const retrieveCachedArticles = async (
   page: number,
   itemsPerPage: number,
 ): Promise<{ articles: IArticle[] | undefined; cacheStatus: string }> => {
+  if (process.env.NODE_ENV !== "production") {
+    return { articles: undefined, cacheStatus: "miss" }; // Don't cache in development environment.
+  }
+
   const startIndex = (page - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
 
