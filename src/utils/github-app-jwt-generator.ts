@@ -54,7 +54,13 @@ const getJwtToken = async (): Promise<string> => {
 
   // Otherwise, generate a new JWT
   // Replace with your actual GitHub App's PEM file path
-  const pem = "./tej-articles-handler.2024-08-04.private-key.pem";
+  let pem;
+  if (process.env.NODE_ENV !== "production") {
+    pem = "./tej-articles-handler.2024-08-04.private-key.pem";
+  } else {
+    pem = "/etc/secrets/tej-articles-handler.2024-08-04.private-key.pem"; // Replace with the actual path to your PEM file.
+  }
+
   const client_id = "Iv23li6XQgbvs6rlfbAb";
 
   const newToken = await generateJWT(pem, client_id);
