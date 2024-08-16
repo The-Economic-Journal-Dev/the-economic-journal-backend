@@ -12,9 +12,9 @@ import connectToDB from "./db/connect"; // Import the database connection functi
 import { initializeCache } from "./utils/cache-utils";
 
 import { authenticateFirebaseId } from "./auth/authenticate-firebase-cred";
-import apiRoutes from "./routes/apiRoutes"; // Import the main routes serving the HTML
+import apiRoutes from "./routes/api-routes"; // Import the main routes serving the HTML
 import helmet from "helmet";
-import cors from "cors";
+import userRouter from "./routes/user-routes";
 
 // Use Helmet!
 app.use(helmet());
@@ -57,6 +57,7 @@ app.get(
 );
 
 app.use("/articles", apiRoutes);
+app.use("/users", userRouter);
 
 app.use(errorHandler);
 

@@ -35,27 +35,26 @@ function isAcceptedMimetype(mimetype: string): boolean {
   const acceptedImagePattern = /^image\/(gif|jpg|jpeg|png)$/;
   return acceptedImagePattern.test(mimetype);
 }
+// async (req: Request, res: Response, next: NextFunction) => {
+//     if (process.env.NODE_ENV !== "production") {
+//       return next(); // Skip CORS setting in non-production environments
+//     } else {
+//       // Configure CORS for this specific route to be available from dash.derpdevstuffs.org
+//       res.removeHeader("Access-Control-Allow-Origin");
+//       const allowedDomain = "https://dash.derpdevstuffs.org";
+//       const origin = req.get("Origin");
 
+//       // If the request's Origin header matches the allowed domain, set the CORS header
+//       if (origin === allowedDomain) {
+//         res.append("Access-Control-Allow-Origin", allowedDomain);
+//       } else {
+//         res.append("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
+//       }
+//       next();
+//     }
+//   },
 // VerifyRole has been defined as a middleware before this so req.user is populated
 const createNewArticle = [
-  async (req: Request, res: Response, next: NextFunction) => {
-    if (process.env.NODE_ENV !== "production") {
-      return next(); // Skip CORS setting in non-production environments
-    } else {
-      // Configure CORS for this specific route to be available from dash.derpdevstuffs.org
-      res.removeHeader("Access-Control-Allow-Origin");
-      const allowedDomain = "https://dash.derpdevstuffs.org";
-      const origin = req.get("Origin");
-
-      // If the request's Origin header matches the allowed domain, set the CORS header
-      if (origin === allowedDomain) {
-        res.append("Access-Control-Allow-Origin", allowedDomain);
-      } else {
-        res.append("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
-      }
-      next();
-    }
-  },
   upload.fields([
     {
       name: "image",

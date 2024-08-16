@@ -199,3 +199,31 @@
 //   getUserProfile,
 //   changeUserPassword,
 // };
+
+import admin from "../services/firebase/firebase-admin-client";
+import { Request, Response } from "express";
+
+const getUserFromUid = async (req: Request, res: Response) => {
+  const { uid } = req.params;
+
+  try {
+    // Fetch user record by UID
+    const userRecord = await admin.auth().getUser(uid);
+
+    // Access username from userRecord (assuming it is a custom claim or user attribute)
+    // If the username is stored in custom claims, it would be accessible like this:
+    const username = userRecord.customClaims?.displayName;
+
+    if (!username) {
+        throwError("User does not have a display name", 403);
+    }
+
+    // Send response
+    res.json({ uid: userRecord.uid, displayName: username });
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    throwError("Error fetching user data", 500);
+  }
+};
+
+export { getUserFromUid };
