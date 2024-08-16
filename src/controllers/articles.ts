@@ -397,13 +397,13 @@ const editArticle = [
 const deleteArticle = [
   async (req: Request, res: Response) => {
     try {
-      const { id: articleId } = req.params;
+      const { id } = req.params;
 
-      const article = await ArticleModel.findOneAndDelete({ _id: articleId });
+      const article = await ArticleModel.findOneAndDelete({ metaTitle: id });
 
       if (!article) {
         throwError(
-          `No article with id: ${articleId} found.`,
+          `No article with meta title: ${id} found.`,
           StatusCodes.NOT_FOUND,
         );
       }
