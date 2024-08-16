@@ -427,7 +427,7 @@ const deleteArticle = [
 
       return res.status(200).json({
         success: true,
-        message: `Article with id: ${articleId} deleted.`,
+        message: `Article with id: ${id} deleted.`,
         article: null,
       });
     } catch (error) {
