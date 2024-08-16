@@ -68,7 +68,7 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
     type: String,
     select: false,
     minlength: 1,
-    maxlength: 2000,
+    maxlength: 20000,
   },
   category: {
     type: String,
