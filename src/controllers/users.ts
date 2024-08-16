@@ -212,10 +212,10 @@ const getUserFromUid = async (req: Request, res: Response) => {
 
     // Access username from userRecord (assuming it is a custom claim or user attribute)
     // If the username is stored in custom claims, it would be accessible like this:
-    const username = userRecord.customClaims?.displayName;
+    const username = userRecord.displayName;
 
     if (!username) {
-        throwError("User does not have a display name", 403);
+      throwError("User does not have a display name", 403);
     }
 
     // Send response
