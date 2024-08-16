@@ -20,18 +20,21 @@ router
   .route("/")
   .post(verifyRole(["writer", "admin"]), createNewArticle)
   .get(getArticles);
-router
-  .route("/:id")
-  .get(getSingleArticle)
-  .patch(verifyRole(["writer", "admin"]), editArticle)
-  .delete(verifyRole(["writer", "admin"]), deleteArticle);
 
-router.route("/search").get(searchArticles);
-
+// Use this router
 router
   .route("/:id/like")
   .all(authenticateFirebaseId)
   .post(likeArticle)
   .delete(unlikeArticle);
+
+router
+  .route("/:id")
+  .get(getSingleArticle)
+  .patch(verifyRole(["writer", "admin"]), editArticle)
+  .delete(verifyRole(["writer", "admin"]), deleteArticle);
+// In this router
+
+router.route("/search").get(searchArticles);
 
 export default router;
