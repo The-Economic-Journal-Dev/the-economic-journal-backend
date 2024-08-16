@@ -29,7 +29,7 @@ router
 router.route("/search").get(searchArticles);
 
 router
-  .route("/like")
+  .route("/:id/like")
   .all(authenticateFirebaseId)
   .post(likeArticle)
   .delete(unlikeArticle);
