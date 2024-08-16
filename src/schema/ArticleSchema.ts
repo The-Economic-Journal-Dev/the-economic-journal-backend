@@ -16,7 +16,7 @@ const ArticleSchema = Joi.object({
     "string.empty": "A metaTitle is required",
   }),
   summary: Joi.string().allow(""),
-  articleBody: Joi.string().min(1).max(2000).required().messages({
+  articleBody: Joi.string().min(1).max(20000).required().messages({
     "any.empty": "Body is required",
     "any.min": "Body must be at least 1 characters long",
     "any.max": "Body must be less than 2000 characters long",

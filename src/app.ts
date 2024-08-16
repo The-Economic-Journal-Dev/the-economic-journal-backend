@@ -15,7 +15,6 @@ import { authenticateFirebaseId } from "./auth/authenticate-firebase-cred";
 import apiRoutes from "./routes/apiRoutes"; // Import the main routes serving the HTML
 import helmet from "helmet";
 import cors from "cors";
-import displaySystemSpecs from "./utils/display-vm-specs";
 
 // Use Helmet!
 app.use(helmet());
@@ -71,7 +70,6 @@ const startApp = async () => {
   const port = process.env.SERVER_PORT || 3000; // Set the port from the environment variable or default to 3000
   app.listen(port, () => {
     logger.info(`Server is running on port ${port} on ${process.env.NODE_ENV}`);
-    displaySystemSpecs();
   });
 };
 

@@ -25,13 +25,15 @@ const getHeaders = async (): Promise<{
     "X-GitHub-Api-Version": string;
   };
 }> => {
+  const jwt = await getJwtToken();
+
   const response = await axios.post(
     `https://api.github.com/app/installations/53459338/access_tokens`,
     {},
     {
       headers: {
         Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${await getJwtToken()}`,
+        Authorization: `Bearer ${jwt}`,
         "X-GitHub-Api-Version": "2022-11-28",
       },
     },
@@ -118,8 +120,8 @@ const uploadNewArticle = async (
       logger.info("Success:", response.data);
     })
     .catch((error) => {
-      logger.error("Error uploading file to github:", error.response.data);
-      throwError("Error uploading file");
+      logger.error(error);
+      throwError("Error uploading file to github");
     });
 };
 

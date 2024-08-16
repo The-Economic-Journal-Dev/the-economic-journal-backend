@@ -150,7 +150,7 @@ const uploadFileToS3 = async (
     // Upload the file to S3
     await uploadFileToS3Service(uploadParams, s3Client);
 
-    return `${process.env.CLOUDFRONT_URI!}/${fileName}`;
+    return `${process.env.IMAGE_BUCKET_URL!}/${fileName}`;
   } catch (error) {
     logger.error("An error has occurred while uploading file" + error);
     throwError("An error has occurred while uploading file");
