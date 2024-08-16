@@ -162,6 +162,7 @@ const createNewArticle = [
 interface GetArticleQuery {
   page?: string;
   count?: string;
+  category?: string;
   includeHTML?: string;
   includeText?: string;
 }
@@ -174,6 +175,7 @@ const getArticles = async (
   const { query } = req;
   const page = parseInt(query.page || "1");
   const count = parseInt(query.count || "20");
+  const category = query.category;
   const includeHTML = query.includeHTML === "true";
   const includeText = query.includeText === "true";
 
@@ -194,6 +196,11 @@ const getArticles = async (
       .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
       .skip(skipCount) // Skip documents to implement pagination
       .limit(validatedCount); // Limit the number of documents returned per page;
+
+    // Add a category filter if a category is provided
+    if (category) {
+      articleDbQuery = articleDbQuery.where("category").equals(category);
+    }
 
     // Optionally select articleBody field based on includeBody flag
     // Always exclude likedBy and articleText
