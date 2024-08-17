@@ -32,16 +32,22 @@ const initializeCache = async (): Promise<void> => {
     return articles;
   };
 
-  await cache.wrap(
-    "articles",
-    () => fetchArticlesData(),
-    60 * 60 * 1000,
-    60 * 1000,
-    {
-      nonBlockingSet: true,
-    },
-  );
+  // await cache.wrap(
+  //   "articles",
+  //   () => fetchArticlesData(),
+  //   60 * 60 * 1000,
+  //   60 * 1000,
+  //   {
+  //     nonBlockingSet: true,
+  //   },
+  // );
 };
+
+interface QueryParams {
+  includeHTML: boolean;
+  includeText: boolean;
+  category?: string;
+}
 
 /**
  * Retrieves a paginated list of cached articles.
@@ -49,34 +55,37 @@ const initializeCache = async (): Promise<void> => {
  * @async
  * @param {number} page - The page number to retrieve.
  * @param {number} itemsPerPage - The number of items per page.
+ * @param {QueryParams} query - The query for the paginated list
  * @returns {Promise<{ articles: IArticle[] | undefined, cacheStatus: string }>} A promise that resolves to an object containing the array of articles for the specified page,
  * or `undefined` if the cache is not present, not an array, and a cacheStatus indicating if it was a "hit", "miss", or "stale".
  */
 const retrieveCachedArticles = async (
   page: number,
   itemsPerPage: number,
+  query: QueryParams,
 ): Promise<{ articles: IArticle[] | undefined; cacheStatus: string }> => {
-  if (process.env.NODE_ENV !== "production") {
-    return { articles: undefined, cacheStatus: "miss" }; // Don't cache in development environment.
-  }
+  return { articles: undefined, cacheStatus: "miss" };
+  // if (process.env.NODE_ENV !== "production") {
+  //   return { articles: undefined, cacheStatus: "miss" }; // Don't cache in development environment.
+  // }
 
-  const startIndex = (page - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  // const startIndex = (page - 1) * itemsPerPage;
+  // const endIndex = startIndex + itemsPerPage;
 
-  const array = await cache.get("articles");
+  // const array = await cache.get("articles");
 
-  if (!array || !Array.isArray(array)) {
-    logger.error("Articles cache not present or is not of Array type.");
-    return { articles: undefined, cacheStatus: "miss" };
-  }
+  // if (!array || !Array.isArray(array)) {
+  //   logger.error("Articles cache not present or is not of Array type.");
+  //   return { articles: undefined, cacheStatus: "miss" };
+  // }
 
-  if (startIndex >= array.length) {
-    return { articles: undefined, cacheStatus: "miss" };
-  }
+  // if (startIndex >= array.length) {
+  //   return { articles: undefined, cacheStatus: "miss" };
+  // }
 
-  const paginatedItems: IArticle[] = array.slice(startIndex, endIndex);
+  // const paginatedItems: IArticle[] = array.slice(startIndex, endIndex);
 
-  return { articles: paginatedItems, cacheStatus: "hit" };
+  // return { articles: paginatedItems, cacheStatus: "hit" };
 };
 
 export { initializeCache, retrieveCachedArticles };

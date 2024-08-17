@@ -182,43 +182,56 @@ const getArticles = async (
   const validatedPageNumber = Math.max(1, Math.floor(page));
   const validatedCount = Math.max(1, Math.floor(count));
 
-  let { articles, cacheStatus } = await retrieveCachedArticles(
-    validatedPageNumber,
-    validatedCount,
-  );
+  // const queryParams = {
+  //   includeHTML,
+  //   includeText,
+  //   category,
+  // };
 
-  if (!articles) {
-    // Calculate how many documents to skip
-    const skipCount = (validatedPageNumber - 1) * validatedCount;
+  // let { articles, cacheStatus } = await retrieveCachedArticles(
+  //   validatedPageNumber,
+  //   validatedCount,
+  //   queryParams,
+  // );
 
-    let articleDbQuery = ArticleModel.find()
-      .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
-      .skip(skipCount) // Skip documents to implement pagination
-      .limit(validatedCount); // Limit the number of documents returned per page;
+  // if (!articles) {
+  // Calculate how many documents to skip
+  const skipCount = (validatedPageNumber - 1) * validatedCount;
 
-    // Add a category filter if a category is provided
-    if (category) {
-      articleDbQuery = articleDbQuery.where("category").equals(category);
-    }
+  let articleDbQuery = ArticleModel.find()
+    .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
+    .skip(skipCount) // Skip documents to implement pagination
+    .limit(validatedCount); // Limit the number of documents returned per page;
 
-    // Optionally select articleBody field based on includeBody flag
-    // Always exclude likedBy and articleText
-    let selectString = "-likedBy";
-
-    // Conditionally include articleBody based on includeBody flag
-    if (includeHTML) {
-      selectString = "+articleBody " + selectString;
-    }
-
-    // Conditionally include articleText based on includeText flag
-    if (includeText) {
-      selectString = "+articleText " + selectString;
-    }
-
-    articles = await articleDbQuery.select(selectString);
+  // Add a category filter if a category is provided
+  if (category) {
+    articleDbQuery = articleDbQuery.where("category").equals(category);
   }
 
-  res.append("X-Cache-Status", cacheStatus);
+  // Optionally select articleBody field based on includeBody flag
+  // Always exclude likedBy and articleText
+  let selectString = "-likedBy";
+
+  // Conditionally include articleBody based on includeBody flag
+  if (includeHTML) {
+    selectString = "+articleBody " + selectString;
+  } else {
+    selectString = "-articleBody " + selectString;
+  }
+
+  // Conditionally include articleText based on includeText flag
+  if (includeText) {
+    selectString = "+articleText " + selectString;
+  } else {
+    selectString = "-articleText " + selectString;
+  }
+
+  articleDbQuery = articleDbQuery.select(selectString);
+
+  const articles = await articleDbQuery.exec();
+  // }
+
+  // res.append("X-Cache-Status", "miss");
   res.json({
     success: true,
     message: "Articles fetched successfully",
