@@ -30,6 +30,8 @@ app.use((req, res, next) => {
     res.append("Access-Control-Allow-Origin", [
       "https://www.derpdevstuffs.org",
       "https://derpdevstuffs.org",
+      "https://www.theeconomicjournal.org",
+      "https://theeconomicjournal.org",
     ]);
     next();
   }

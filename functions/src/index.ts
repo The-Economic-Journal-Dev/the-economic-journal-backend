@@ -46,9 +46,9 @@ exports.processSignUp = functions.auth.user().onCreate(async (user) => {
   try {
     // Determine custom claims based on the email domain
     let customClaims: CustomClaims;
-    if (user.email?.endsWith("@admin.derpdevstuffs.org")) {
+    if (user.email?.endsWith("@admin.theeconomicjournal.org")) {
       customClaims = { role: "admin" };
-    } else if (user.email?.endsWith("@derpdevstuffs.org")) {
+    } else if (user.email?.endsWith("@theeconomicjournal.org")) {
       customClaims = { role: "writer" };
     } else {
       customClaims = { role: "reader" };
