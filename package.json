@@ -6,10 +6,11 @@
   "scripts": {
     "copy-assets": "ts-node ./tools/copyAssets.ts",
     "build": "rimraf ./dist && tsc && npm run copy-assets",
-    "start": "pm2 start dist/app.js && firebase deploy --only functions:processSignUp",
+    "start": "pm2 start dist/app.js",
     "watch": "tsc -w",
     "dev": "ts-node-dev --poll --files src/app.ts",
-    "prod": "set NODE_ENV=production && node dist/app.js"
+    "set-prod-env": "set NODE_ENV=production",
+    "prod": "npm run build && npm run set-prod-env && node dist/app.js"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +23,6 @@
     "axios": "^1.7.2",
     "cache-manager": "^5.7.4",
     "connect-mongo": "^5.1.0",
-    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "ejs": "^3.1.10",
     "express": "^4.17.1",

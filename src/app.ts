@@ -27,12 +27,7 @@ app.use((req, res, next) => {
     res.append("Access-Control-Allow-Origin", "*");
     next();
   } else {
-    res.append("Access-Control-Allow-Origin", [
-      "https://www.derpdevstuffs.org",
-      "https://derpdevstuffs.org",
-      "https://www.theeconomicjournal.org",
-      "https://theeconomicjournal.org",
-    ]);
+    res.append("Access-Control-Allow-Origin", "https://theeconomicjournal.org");
     next();
   }
 });

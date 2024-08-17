@@ -8,7 +8,8 @@ const authenticateFirebaseId = async (
   next: NextFunction,
 ) => {
   if (process.env.NODE_ENV !== "production") {
-    next(); // Continue to the next middleware if NODE_ENV is not 'production'
+    logger.info(`Authentication bypassed during ${process.env.NODE_ENV}`); // Continue to the next middleware if NODE_ENV is not 'production'
+    next();
   } else {
     const authHeader = req.headers["authorization"];
     let idToken;
@@ -32,6 +33,8 @@ const authenticateFirebaseId = async (
         next();
       })
       .catch((error) => {
+        logger.error(error);
+        logger.info(`Token: ${idToken}`);
         throwError("Invalid token", StatusCodes.UNAUTHORIZED);
       });
   }
@@ -51,7 +54,7 @@ const verifyRole = (requiredRole: String[]) => {
           );
         }
 
-        if (requiredRole.includes((req.user as any).role)) {
+        if (requiredRole && requiredRole.includes((req.user as any).role)) {
           next();
         } else {
           throwError(

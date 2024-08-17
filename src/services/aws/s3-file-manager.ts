@@ -4,9 +4,7 @@ import {
   PutObjectCommandInput,
   DeleteObjectCommand,
   DeleteObjectCommandInput,
-  S3ServiceException,
 } from "@aws-sdk/client-s3";
-import { Readable } from "stream";
 import { StatusCodes } from "http-status-codes";
 import createS3Client, { S3Config } from "./clients/s3";
 
@@ -69,7 +67,7 @@ const uploadFileToS3Service = async (
   s3Client: S3Client,
 ): Promise<void> => {
   // Create the upload parameters
-  const uploadParams = {
+  const uploadParams: PutObjectCommandInput = {
     Bucket: config.Bucket,
     Key: config.Key,
     Body: config.Body,

@@ -39,6 +39,12 @@ const createS3Client = (config: S3Config): S3Client => {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    logger: {
+      debug: () => {}, // No-op function
+      info: () => {}, // No-op function
+      warn: console.warn.bind(console),
+      error: console.error.bind(console),
+    },
   });
 };
 
