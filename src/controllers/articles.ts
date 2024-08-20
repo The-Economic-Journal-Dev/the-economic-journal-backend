@@ -454,17 +454,31 @@ const likeArticle = async (req: Request, res: Response) => {
   const userId = req.user?.uid; // Assuming you have user authentication middleware
 
   if (!userId) {
-    throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: true,
+      message: "User might not be logged in",
+    });
   }
 
-  const article = await ArticleModel.findById(articleId);
+  const article = await ArticleModel.findOne(
+    { metaTitle: articleId },
+    "likedBy likesCount",
+  );
+
   if (!article) {
-    throwError("Article not found", StatusCodes.NOT_FOUND);
+    return res.status(StatusCodes.NOT_FOUND).json({
+      success: true,
+      message: "Article not found",
+    });
   }
 
   // Check if the user has already liked the article
   if (article.likedBy.includes(userId)) {
-    throwError("You have already liked this article", StatusCodes.BAD_REQUEST);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: true,
+      message: "Article already liked",
+      likes: article.likesCount,
+    });
   }
 
   // Add the user to the likedBy array
@@ -472,7 +486,7 @@ const likeArticle = async (req: Request, res: Response) => {
 
   await article.save();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Article liked successfully",
     likes: article.likesCount,
@@ -484,25 +498,40 @@ const unlikeArticle = async (req: Request, res: Response) => {
   const userId = req.user?.uid; // Assuming you have user authentication middleware
 
   if (!userId) {
-    throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: true,
+      message: "User might not be logged in",
+    });
   }
 
-  const article = await ArticleModel.findById(articleId);
+  const article = await ArticleModel.findOne(
+    { metaTitle: articleId },
+    "likedBy likesCount",
+  );
+
   if (!article) {
-    throwError("Article not found", StatusCodes.NOT_FOUND);
+    return res.status(StatusCodes.NOT_FOUND).json({
+      success: true,
+      message: "Article not found",
+    });
   }
 
-  // Check if the user has already liked the article
+  // Check if the user has already not liked the article
   if (!article.likedBy.includes(userId)) {
-    throwError("You have not liked the article", StatusCodes.BAD_REQUEST);
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: true,
+      message: "Article already not liked",
+      likes: article.likesCount,
+    });
   }
 
   // Remove the user from the likedBy array
-  article.likedBy.pull({ uid: userId });
+  const index = article.likedBy.indexOf(userId);
+  article.likedBy.splice(index, 1);
 
   await article.save();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Article unliked successfully",
     likes: article.likesCount,
