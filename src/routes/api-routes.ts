@@ -24,6 +24,8 @@ likeRouter
   .post(authenticateFirebaseId, likeArticle)
   .delete(authenticateFirebaseId, unlikeArticle);
 
+router.route("/search").get(searchArticles);
+
 router
   .route("/")
   .post(verifyRole(["writer", "admin"]), createNewArticle)
@@ -34,7 +36,5 @@ router
   .get(getSingleArticle)
   .patch(verifyRole(["writer", "admin"]), editArticle)
   .delete(verifyRole(["writer", "admin"]), deleteArticle);
-
-router.route("/search").get(searchArticles);
 
 export default router;

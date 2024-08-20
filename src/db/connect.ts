@@ -1,6 +1,5 @@
-import mongoose, { Mongoose } from "mongoose";
+import mongoose from "mongoose";
 import type { MongoClient } from "mongodb";
-import MongoStore from "connect-mongo";
 
 // Function to connect to MongoDB
 const connectToDB = async (url: string) => {

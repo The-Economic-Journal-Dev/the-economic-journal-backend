@@ -74,7 +74,7 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
     required: true,
   },
   likedBy: {
-    type: [{ type: String, ref: "Users" }],
+    type: [String],
     default: [],
     select: false, // Do not include this field in the response by default
   },

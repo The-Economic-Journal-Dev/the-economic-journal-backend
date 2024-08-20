@@ -9,7 +9,7 @@ import express, { Request, Response } from "express"; // Import Express
 const app = express(); // Create an Express application
 
 import connectToDB from "./db/connect"; // Import the database connection function
-import { initializeCache } from "./utils/cache-utils";
+// import { initializeCache } from "./utils/cache-utils";
 
 import { authenticateFirebaseId } from "./auth/authenticate-firebase-cred";
 import apiRoutes from "./routes/api-routes"; // Import the main routes serving the HTML
@@ -60,10 +60,10 @@ app.use(errorHandler);
 
 const startApp = async () => {
   // Connect to mongo db
-  connectToDB(process.env.MONGO_URI!);
+  await connectToDB(process.env.MONGO_URI!);
 
   // Ensure cache is initialized
-  await initializeCache();
+  // await initializeCache();
 
   const port = process.env.SERVER_PORT || 3000; // Set the port from the environment variable or default to 3000
   app.listen(port, () => {
