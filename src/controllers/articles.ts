@@ -516,11 +516,11 @@ const unlikeArticle = async (req: Request, res: Response) => {
     });
   }
 
-  // Check if the user has already liked the article
+  // Check if the user has already not liked the article
   if (!article.likedBy.includes(userId)) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       success: true,
-      message: "Article not already liked",
+      message: "Article already not liked",
       likes: article.likesCount,
     });
   }
