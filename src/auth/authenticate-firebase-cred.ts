@@ -10,7 +10,6 @@ const authenticateFirebaseId = async (
 ) => {
   if (process.env.NODE_ENV !== "production") {
     logger.info(`Authentication bypassed during ${process.env.NODE_ENV}`); // Continue to the next middleware if NODE_ENV is not 'production'
-    next();
   } else {
     const authHeader = req.headers["authorization"];
     let idToken;
