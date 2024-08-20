@@ -15,6 +15,14 @@ import {
 } from "../controllers/articles";
 
 const router = express.Router();
+const likeRouter = express.Router({ mergeParams: true });
+
+router.use("/:id/like", likeRouter);
+
+likeRouter
+  .route("/")
+  .post(authenticateFirebaseId, likeArticle)
+  .delete(authenticateFirebaseId, unlikeArticle);
 
 router.route("/search").get(searchArticles);
 
@@ -23,18 +31,10 @@ router
   .post(verifyRole(["writer", "admin"]), createNewArticle)
   .get(getArticles);
 
-// Use this router
-router
-  .route("/:id/like")
-  .all(authenticateFirebaseId)
-  .post(likeArticle)
-  .delete(unlikeArticle);
-
 router
   .route("/:id")
   .get(getSingleArticle)
   .patch(verifyRole(["writer", "admin"]), editArticle)
   .delete(verifyRole(["writer", "admin"]), deleteArticle);
-// In this router
 
 export default router;

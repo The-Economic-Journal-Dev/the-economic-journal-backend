@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { auth } from "../services/firebase/firebase-admin-client";
 import { NextFunction, Request, Response } from "express";
+import { DecodedIdToken } from "firebase-admin/auth";
 
 const authenticateFirebaseId = async (
   req: Request,
@@ -9,7 +10,6 @@ const authenticateFirebaseId = async (
 ) => {
   if (process.env.NODE_ENV !== "production") {
     logger.info(`Authentication bypassed during ${process.env.NODE_ENV}`); // Continue to the next middleware if NODE_ENV is not 'production'
-    next();
   } else {
     const authHeader = req.headers["authorization"];
     let idToken;
@@ -17,27 +17,27 @@ const authenticateFirebaseId = async (
     if (authHeader && authHeader.startsWith("Bearer ")) {
       idToken = authHeader.substring(7, authHeader.length);
     } else {
-      throwError(
-        "Invalid or Missing Authentication Header",
-        StatusCodes.FORBIDDEN,
-      );
+      return res.status(StatusCodes.FORBIDDEN).json({
+        success: false,
+        message: "Invalid or Missing Authentication Header",
+      });
     }
 
-    auth
-      .verifyIdToken(idToken)
-      .then((decodedToken) => {
-        req.user = {
-          uid: decodedToken.uid,
-          role: decodedToken.role, // Assuming 'role' is a custom claim
-        };
-        next();
-      })
-      .catch((error) => {
-        logger.error(error);
-        logger.info(`Token: ${idToken}`);
-        throwError("Invalid token", StatusCodes.UNAUTHORIZED);
-      });
+    try {
+      const decodedToken: DecodedIdToken = await auth.verifyIdToken(idToken);
+
+      req.user = {
+        uid: decodedToken.uid,
+        role: decodedToken.role, // Assuming 'role' is a custom claim
+      };
+    } catch (error) {
+      logger.error(error);
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ success: false, message: "Invalid token" });
+    }
   }
+  next();
 };
 
 const verifyRole = (requiredRole: String[]) => {
