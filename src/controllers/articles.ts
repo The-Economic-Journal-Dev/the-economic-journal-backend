@@ -619,7 +619,6 @@ const searchArticles = async (
         },
       },
     },
-    ,
     // Pagination stage
     {
       $skip: validatedPageNumber - 1, // Number of documents to skip (pagination offset)

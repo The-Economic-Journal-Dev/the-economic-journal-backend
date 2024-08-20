@@ -16,6 +16,8 @@ import {
 
 const router = express.Router();
 
+router.route("/search").get(searchArticles);
+
 router
   .route("/")
   .post(verifyRole(["writer", "admin"]), createNewArticle)
@@ -34,7 +36,5 @@ router
   .patch(verifyRole(["writer", "admin"]), editArticle)
   .delete(verifyRole(["writer", "admin"]), deleteArticle);
 // In this router
-
-router.route("/search").get(searchArticles);
 
 export default router;
