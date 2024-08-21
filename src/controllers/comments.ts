@@ -12,17 +12,23 @@ const createNewComment = [
     const userId = (req.user as any)._id;
 
     if (!userId) {
-      throwError("User might not be logged in", StatusCodes.BAD_REQUEST);
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: "User might not be logged in" });
     }
 
     if (!content) {
-      throwError("Comment content is required", StatusCodes.BAD_REQUEST);
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: "Comment content is required" });
     }
 
     const articleExists = await ArticleModel.exists({ _id: articleId });
 
     if (!articleExists) {
-      throwError("Article not found", StatusCodes.NOT_FOUND);
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: "Article not found" });
     }
 
     const newComment: IComment = new CommentModel({
@@ -54,7 +60,9 @@ const deleteComment = [
     });
 
     if (comment) {
-      throwError("Comment not found", StatusCodes.BAD_REQUEST);
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: "Comment not found" });
     }
 
     res.status(201).json({

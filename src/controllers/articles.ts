@@ -78,10 +78,9 @@ const createNewArticle = [
     });
 
     if (!articleValidationResult.success) {
-      throwError(
-        articleValidationResult.message,
-        articleValidationResult.status,
-      );
+      return res
+        .status(articleValidationResult.status)
+        .json({ success: false, message: articleValidationResult.message });
     }
 
     let imageUrl = "";
@@ -90,10 +89,10 @@ const createNewArticle = [
     if (images) {
       const image = images[0];
       if (!isAcceptedMimetype(image.mimetype)) {
-        throwError(
-          `Invalid mimetype for file ${image.filename}.`,
-          StatusCodes.BAD_REQUEST,
-        );
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: `Invalid mimetype for file ${image.filename}.`,
+        });
       }
       imageUrl = await uploadFileToS3(image);
     }
@@ -254,11 +253,14 @@ const getSingleArticle = [
 
     // Check if the article exists
     if (!article) {
-      throwError("Article not found", 404);
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Article not found",
+      });
     }
 
     // Return the article
-    return res.status(200).json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: "Article fetched successfully",
       article,
@@ -302,7 +304,9 @@ const editArticle = [
     const editorId = req.user?.uid; // req.user? because the fucking type declaration won't work
 
     if (!editorId) {
-      throwError("The request doesn't have an id", StatusCodes.BAD_REQUEST);
+      res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ success: false, message: "The request doesn't have an id" });
     }
 
     try {
@@ -318,22 +322,24 @@ const editArticle = [
           const image = files["image"][0];
           if (image) {
             if (!isAcceptedMimetype(image.mimetype)) {
-              throwError(
-                `Invalid mimetype for file ${image.fieldname}.`,
-                StatusCodes.BAD_REQUEST,
-              );
+              res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: `Invalid mimetype for file ${image.filename}.`,
+              });
             }
 
             const url = article?.imageUrl;
             const imageName = extractImageName(url);
             if (!imageName) {
-              throwError("Couldn't extract image name");
+              logger.warn(
+                `Couldn't extract image name for article ${metaTitle}, perhaps there's no image?`,
+              );
+            } else {
+              await purgeCloudflareImagesCache(imageName);
             }
 
             // Replace the old image with the new one in the S3 bucket
             imageUrl = await uploadFileToS3(image, imageName);
-
-            await purgeCloudflareImagesCache(imageName);
           }
         }
         const articleValidationResult = validateArticle({
@@ -345,17 +351,14 @@ const editArticle = [
         });
 
         if (!articleValidationResult.success) {
-          throwError(
-            articleValidationResult.message,
-            articleValidationResult.status,
-          );
+          return res
+            .status(articleValidationResult.status)
+            .json({ success: false, message: articleValidationResult.message });
         }
 
         if (imageUrl !== "") {
           article.imageUrl = imageUrl;
         }
-
-        const newArticle = { title, metaTitle, summary, articleBody };
 
         // Sanitize the title and other fields to prevent XSS attacks
         const sanitizedTitle = sanitizeHtml(title, {
@@ -390,7 +393,10 @@ const editArticle = [
 
         await article.save();
       } else {
-        throwError(`No article with id: ${articleId} found.`, 404);
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          message: `No article with meta title: ${articleId} found.`,
+        });
       }
 
       res.setHeader("Last-Modified", article.lastUpdated.toString());
@@ -402,7 +408,9 @@ const editArticle = [
       });
     } catch (error) {
       logger.error("Error while editing article:", error);
-      throwError("Error while editing article");
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: (error as Error).message });
     }
   },
 ];
@@ -415,10 +423,10 @@ const deleteArticle = [
       const article = await ArticleModel.findOneAndDelete({ metaTitle: id });
 
       if (!article) {
-        throwError(
-          `No article with meta title: ${id} found.`,
-          StatusCodes.NOT_FOUND,
-        );
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          message: `No article with meta title: ${id} found.`,
+        });
       }
 
       // Delete the image associated with the article from the S3 bucket
@@ -584,14 +592,18 @@ const searchArticles = async (
   if (startDate) {
     if (!isValidISOString(startDate)) {
       logger.error("Invalid start date format was provided.");
-      throwError("Invalid start date format", StatusCodes.BAD_REQUEST);
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: "Invalid start date format" });
     }
   }
 
   if (endDate) {
     if (!isValidISOString(endDate)) {
-      logger.error("Invalid start date format was provided.");
-      throwError("Invalid start date format", StatusCodes.BAD_REQUEST);
+      logger.error("Invalid end date format was provided.");
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: "Invalid end date format" });
     }
   }
 

@@ -49,19 +49,19 @@ const verifyRole = (requiredRole: String[]) => {
         next(); // Continue to the next middleware if NODE_ENV is not 'production'
       } else {
         if (!req.user) {
-          throwError(
-            "Unauthorized: User not authenticated",
-            StatusCodes.UNAUTHORIZED,
-          );
+          return res.status(StatusCodes.UNAUTHORIZED).json({
+            success: false,
+            message: "Unauthorized: User not authenticated",
+          });
         }
 
         if (requiredRole && requiredRole.includes((req.user as any).role)) {
           next();
         } else {
-          throwError(
-            "Unauthorized: User does not have the required role",
-            StatusCodes.FORBIDDEN,
-          );
+          return res.status(StatusCodes.FORBIDDEN).json({
+            success: false,
+            message: "Unauthorized: User does not have the required role",
+          });
         }
       }
     },

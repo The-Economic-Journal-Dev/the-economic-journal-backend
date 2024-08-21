@@ -18,7 +18,12 @@ let jwtCache: JWTCache | null = null;
  */
 const generateJWT = async (pem: string, client_id: string): Promise<string> => {
   // Read PEM file
-  const privateKey = fs.readFileSync(pem);
+  try {
+    var privateKey = fs.readFileSync(pem);
+  } catch (error) {
+    throw new Error("Failed to read upload article file");
+  }
+
   const now = Math.floor(Date.now() / 1000 - 60) as number;
   const payload = {
     // Issued at time
