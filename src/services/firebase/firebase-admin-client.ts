@@ -6,6 +6,7 @@ if (!process.env.FIREBASE_CREDENTIALS) {
 }
 
 const credentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+logger.info(credentials.client_id);
 
 // Initialize Firebase Admin
 admin.initializeApp({
