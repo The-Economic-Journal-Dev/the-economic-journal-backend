@@ -8,34 +8,30 @@ const authenticateFirebaseId = async (
   res: Response,
   next: NextFunction,
 ) => {
-  if (process.env.NODE_ENV !== "production") {
-    logger.info(`Authentication bypassed during ${process.env.NODE_ENV}`); // Continue to the next middleware if NODE_ENV is not 'production'
+  const authHeader = req.headers["authorization"];
+  let idToken;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    idToken = authHeader.substring(7, authHeader.length);
   } else {
-    const authHeader = req.headers["authorization"];
-    let idToken;
+    return res.status(StatusCodes.FORBIDDEN).json({
+      success: false,
+      message: "Invalid or Missing Authentication Header",
+    });
+  }
 
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      idToken = authHeader.substring(7, authHeader.length);
-    } else {
-      return res.status(StatusCodes.FORBIDDEN).json({
-        success: false,
-        message: "Invalid or Missing Authentication Header",
-      });
-    }
+  try {
+    const decodedToken: DecodedIdToken = await auth.verifyIdToken(idToken);
 
-    try {
-      const decodedToken: DecodedIdToken = await auth.verifyIdToken(idToken);
-
-      req.user = {
-        uid: decodedToken.uid,
-        role: decodedToken.role, // Assuming 'role' is a custom claim
-      };
-    } catch (error) {
-      logger.error(error);
-      return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json({ success: false, message: "Invalid token" });
-    }
+    req.user = {
+      uid: decodedToken.uid,
+      role: decodedToken.role, // Assuming 'role' is a custom claim
+    };
+  } catch (error) {
+    logger.error(error);
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ success: false, message: "Invalid token" });
   }
   next();
 };
@@ -44,24 +40,20 @@ const verifyRole = (requiredRole: String[]) => {
   return [
     authenticateFirebaseId,
     (req: Request, res: Response, next: NextFunction) => {
-      if (process.env.NODE_ENV !== "production") {
-        next(); // Continue to the next middleware if NODE_ENV is not 'production'
-      } else {
-        if (!req.user) {
-          return res.status(StatusCodes.UNAUTHORIZED).json({
-            success: false,
-            message: "Unauthorized: User not authenticated",
-          });
-        }
+      if (!req.user) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          success: false,
+          message: "Unauthorized: User not authenticated",
+        });
+      }
 
-        if (requiredRole && requiredRole.includes((req.user as any).role)) {
-          next();
-        } else {
-          return res.status(StatusCodes.FORBIDDEN).json({
-            success: false,
-            message: "Unauthorized: User does not have the required role",
-          });
-        }
+      if (requiredRole && requiredRole.includes((req.user as any).role)) {
+        next();
+      } else {
+        return res.status(StatusCodes.FORBIDDEN).json({
+          success: false,
+          message: "Unauthorized: User does not have the required role",
+        });
       }
     },
   ];
