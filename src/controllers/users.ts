@@ -200,6 +200,7 @@
 //   changeUserPassword,
 // };
 
+import { StatusCodes } from "http-status-codes";
 import admin from "../services/firebase/firebase-admin-client";
 import { Request, Response } from "express";
 
@@ -215,14 +216,16 @@ const getUserFromUid = async (req: Request, res: Response) => {
     const username = userRecord.displayName;
 
     if (!username) {
-      throwError("User does not have a display name", 403);
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ success: false, message: "User does not have a display name" });
     }
 
     // Send response
     res.json({ uid: userRecord.uid, displayName: username });
   } catch (error) {
     console.error("Error fetching user data:", error);
-    throwError("Error fetching user data", 500);
+    throwError("Error fetching user data", StatusCodes.INTERNAL_SERVER_ERROR);
   }
 };
 

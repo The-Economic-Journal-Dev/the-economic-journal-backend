@@ -44,11 +44,11 @@ const mimeTypeToExtension: Record<string, string> = {
   "text/html": "html",
 };
 
-function getExtensionFromMimeType(mimeType: string): string {
+function getExtensionFromMimeType(mimeType: string): string | undefined {
   const extension = mimeTypeToExtension[mimeType];
 
   if (!extension) {
-    throwError("Invalid MIME type", StatusCodes.BAD_REQUEST);
+    return undefined;
   }
 
   return extension;
@@ -129,7 +129,11 @@ const uploadFileToS3 = async (
   try {
     logger.info(`Processing file: ${file.originalname}`);
 
-    const ext: string = getExtensionFromMimeType(file.mimetype);
+    const ext = getExtensionFromMimeType(file.mimetype);
+
+    if (!ext) {
+      throwError("Unsupported file format");
+    }
 
     // Generate a unique filename if one is not provided
     if (filename) {
