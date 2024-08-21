@@ -201,7 +201,7 @@
 // };
 
 import { StatusCodes } from "http-status-codes";
-import admin from "../services/firebase/firebase-admin-client";
+import { auth } from "../services/firebase/firebase-admin-client";
 import { Request, Response } from "express";
 
 const getUserFromUid = async (req: Request, res: Response) => {
@@ -209,7 +209,7 @@ const getUserFromUid = async (req: Request, res: Response) => {
 
   try {
     // Fetch user record by UID
-    const userRecord = await admin.auth().getUser(uid);
+    const userRecord = await auth.getUser(uid);
 
     // Access username from userRecord (assuming it is a custom claim or user attribute)
     // If the username is stored in custom claims, it would be accessible like this:
