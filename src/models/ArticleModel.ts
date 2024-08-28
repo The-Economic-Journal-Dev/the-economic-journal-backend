@@ -12,7 +12,6 @@ interface IArticle extends Document {
   imageUrl?: string;
   summary?: string;
   articleBody: string;
-  articleText: string;
   category: "Finance" | "Economic" | "Business" | "Entrepreneurship";
   views: number;
   likedBy: Types.Array<Types.ObjectId>;
@@ -68,11 +67,6 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
     select: false,
     minlength: 1,
   },
-  articleText: {
-    type: String,
-    select: false,
-    minlength: 1,
-  },
   category: {
     type: String,
     enum: ["Finance", "Economic", "Business", "Entrepreneurship"], // Add your desired categories
@@ -94,11 +88,6 @@ ArticleSchema.index({ category: 1, datePublished: -1, articleText: 1 });
 // Pre-save hook to update likesCount
 ArticleSchema.pre("save", async function (next) {
   this.lastUpdated = new Date();
-
-  this.articleText = sanitize(this.articleBody, {
-    allowedTags: [],
-    allowedAttributes: {},
-  });
 
   if (this.isModified("likedBy")) {
     this.likesCount = this.likedBy.length;
