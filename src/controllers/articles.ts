@@ -16,6 +16,7 @@ import {
   removeArticle,
 } from "./github/article-manager";
 import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
+import { Schema, Types } from "mongoose";
 
 // TODO: Tell frontend team to use mammothjs to convert docx file to html in the FRONTEND
 // TODO: Factory out the middleware to follow the DRY principle
@@ -165,7 +166,7 @@ interface GetArticleQuery {
   includeTrending?: string;
 }
 
-const retrieveArticles = async (skipCount: number, validatedCount: number, category: string | undefined, includeHTML: boolean, includeText: boolean, includeTrending: boolean) => {
+const retrieveArticles = async (skipCount: number, validatedCount: number, category: string | undefined, includeHTML: boolean, includeTrending: boolean) => {
   const pipeline = [];
 
   // Match stage for category filtering
@@ -175,10 +176,22 @@ const retrieveArticles = async (skipCount: number, validatedCount: number, categ
 
   // Prepare the projection object
   const projection = {
-    likedBy: 0,  // Always exclude likedBy
-    articleBody: includeHTML ? 1 : 0,
-    articleText: includeText ? 1 : 0
+    authorUid: 1,
+    title: 1,
+    metaTitle: 1,
+    datePublished: 1,
+    lastUpdated: 1,
+    imageUrl: 1,
+    summary: 1,
+    category: 1,
+    views: 1,
+    likesCount: 1,
   };
+
+  if (includeHTML){
+    // @ts-ignore
+    projection.articleBody = 1;
+  }
 
   // Add the projection stage
   pipeline.push({ $project: projection });
@@ -232,7 +245,7 @@ const getArticles = async (
 
   const skipCount = (validatedPageNumber - 1) * validatedCount;
 
-  const result = await retrieveArticles(skipCount, validatedCount, category, includeHTML, includeText, includeTrending);
+  const result = await retrieveArticles(skipCount, validatedCount, category, includeHTML, includeText);
   // Destructure the result to get both sorted arrays
   const { sortedByDate, sortedByLikes } = result;
 
