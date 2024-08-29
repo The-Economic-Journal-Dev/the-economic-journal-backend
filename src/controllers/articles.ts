@@ -161,7 +161,6 @@ interface GetArticleQuery {
   count?: string;
   category?: string;
   includeHTML?: string;
-  includeText?: string;
   includeTrending?: string;
 }
 
@@ -235,7 +234,6 @@ const getArticles = async (
   const count = parseInt(query.count || "20");
   const category = query.category;
   const includeHTML = query.includeHTML === "true";
-  const includeText = query.includeText === "true";
   const includeTrending = query.includeTrending === "true";
 
   // Ensure positive integers for pageNumber and count
