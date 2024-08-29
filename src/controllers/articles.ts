@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { ArticleModel, IArticle } from "../models/ArticleModel";
+import { ArticleModel } from "../models/ArticleModel";
 import { validateArticle } from "../utils/article-validator";
 import {
   uploadFileToS3,
@@ -16,7 +16,6 @@ import {
   removeArticle,
 } from "./github/article-manager";
 import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
-import { retrieveCachedArticles } from "../utils/cache-utils";
 
 // TODO: Tell frontend team to use mammothjs to convert docx file to html in the FRONTEND
 // TODO: Factory out the middleware to follow the DRY principle
@@ -163,7 +162,68 @@ interface GetArticleQuery {
   category?: string;
   includeHTML?: string;
   includeText?: string;
+  includeTrending?: string;
 }
+
+const retrieveArticles = async (skipCount: number, validatedCount: number, category: string | undefined, includeHTML: boolean, includeTrending: boolean) => {
+  const pipeline = [];
+
+  // Match stage for category filtering
+  if (category) {
+    pipeline.push({ $match: { category: category } });
+  }
+
+  // Prepare the projection object
+  const projection = {
+    authorUid: 1,
+    title: 1,
+    metaTitle: 1,
+    datePublished: 1,
+    lastUpdated: 1,
+    imageUrl: 1,
+    summary: 1,
+    category: 1,
+    views: 1,
+    likesCount: 1,
+  };
+
+  if (includeHTML){
+    // @ts-ignore
+    projection.articleBody = 1;
+  }
+
+  // Add the projection stage
+  pipeline.push({ $project: projection });
+
+  // Facet stage for sorting
+  const facetStage = {
+    $facet: {
+      sortedByDate: [
+        { $sort: { datePublished: -1 } },
+        { $skip: skipCount },
+        { $limit: validatedCount }
+      ]
+    }
+  };
+
+  // Conditionally add sortedByViews to the facet stage
+  if (includeTrending) {
+    // @ts-ignore
+    facetStage.$facet.sortedByLikes = [
+      { $sort: { likesCount: -1 } },
+      { $skip: skipCount },
+      { $limit: validatedCount }
+    ];
+  }
+
+  pipeline.push(facetStage);
+
+  const result = await ArticleModel.aggregate(pipeline);
+
+  // The result is an array with one element
+  return result[0];
+};
+
 
 // TODO: add comments support
 const getArticles = async (
@@ -176,65 +236,23 @@ const getArticles = async (
   const category = query.category;
   const includeHTML = query.includeHTML === "true";
   const includeText = query.includeText === "true";
+  const includeTrending = query.includeTrending === "true";
 
   // Ensure positive integers for pageNumber and count
   const validatedPageNumber = Math.max(1, Math.floor(page));
   const validatedCount = Math.max(1, Math.floor(count));
 
-  // const queryParams = {
-  //   includeHTML,
-  //   includeText,
-  //   category,
-  // };
-
-  // let { articles, cacheStatus } = await retrieveCachedArticles(
-  //   validatedPageNumber,
-  //   validatedCount,
-  //   queryParams,
-  // );
-
-  // if (!articles) {
-  // Calculate how many documents to skip
   const skipCount = (validatedPageNumber - 1) * validatedCount;
 
-  let articleDbQuery = ArticleModel.find()
-    .sort({ datePublished: -1 }) // Sort by datePublished descending (latest first)
-    .skip(skipCount) // Skip documents to implement pagination
-    .limit(validatedCount); // Limit the number of documents returned per page;
+  const result = await retrieveArticles(skipCount, validatedCount, category, includeHTML, includeTrending);
+  // Destructure the result to get both sorted arrays
+  const { sortedByDate, sortedByLikes } = result;
 
-  // Add a category filter if a category is provided
-  if (category) {
-    articleDbQuery = articleDbQuery.where("category").equals(category);
-  }
-
-  // Optionally select articleBody field based on includeBody flag
-  // Always exclude likedBy and articleText
-  let selectString = "-likedBy";
-
-  // Conditionally include articleBody based on includeBody flag
-  if (includeHTML) {
-    selectString = "+articleBody " + selectString;
-  } else {
-    selectString = "-articleBody " + selectString;
-  }
-
-  // Conditionally include articleText based on includeText flag
-  if (includeText) {
-    selectString = "+articleText " + selectString;
-  } else {
-    selectString = "-articleText " + selectString;
-  }
-
-  articleDbQuery = articleDbQuery.select(selectString);
-
-  const articles = await articleDbQuery.exec();
-  // }
-
-  // res.append("X-Cache-Status", "miss");
   res.json({
     success: true,
     message: "Articles fetched successfully",
-    articles,
+    articles: sortedByDate,
+    trending: sortedByLikes,
   });
 };
 
@@ -431,6 +449,7 @@ const deleteArticle = [
 
       // Delete the image associated with the article from the S3 bucket
       const url = article.imageUrl;
+      logger.info(`deleting image: ${url}`)
       if (url) {
         const key = extractImageName(url);
         if (key) {
