@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
-import { CommentModel, IComment } from "./CommentModel";
+import { IComment } from "./CommentModel";
 import sanitize from "sanitize-html";
 
 // TypeScript interface to define the schema fields for Article
@@ -12,8 +12,8 @@ interface IArticle extends Document {
   imageUrl?: string;
   summary?: string;
   articleBody: string;
-  articleText: string;
   category: "Finance" | "Economic" | "Business" | "Entrepreneurship";
+  views: number;
   likedBy: Types.Array<Types.ObjectId>;
   likesCount: number;
 }
@@ -57,14 +57,13 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
   summary: {
     type: String,
   },
+  view: {
+    type: Number,
+    default: 0,
+  },
   articleBody: {
     type: String,
     required: true,
-    select: false,
-    minlength: 1,
-  },
-  articleText: {
-    type: String,
     select: false,
     minlength: 1,
   },
@@ -90,11 +89,6 @@ ArticleSchema.index({ category: 1, datePublished: -1, articleText: 1 });
 ArticleSchema.pre("save", async function (next) {
   this.lastUpdated = new Date();
 
-  this.articleText = sanitize(this.articleBody, {
-    allowedTags: [],
-    allowedAttributes: {},
-  });
-
   if (this.isModified("likedBy")) {
     this.likesCount = this.likedBy.length;
   }
@@ -109,6 +103,15 @@ ArticleSchema.pre<IComment>("remove", async function (next) {
   } catch (error) {
     next(error as Error);
   }
+});
+
+// Add a pre-find middleware
+ArticleSchema.pre('findOne', async function() {
+  // Store the filter criteria
+  const filter = this.getFilter();
+
+  // Use updateOne to increment the view count
+  await this.model.updateOne(filter, { $inc: { view: 1 } });
 });
 
 const ArticleModel: Model<IArticle> = mongoose.model<IArticle>(
