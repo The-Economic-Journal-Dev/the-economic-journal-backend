@@ -16,7 +16,6 @@ import {
   removeArticle,
 } from "./github/article-manager";
 import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
-import { Schema, Types } from "mongoose";
 
 // TODO: Tell frontend team to use mammothjs to convert docx file to html in the FRONTEND
 // TODO: Factory out the middleware to follow the DRY principle
@@ -162,7 +161,6 @@ interface GetArticleQuery {
   count?: string;
   category?: string;
   includeHTML?: string;
-  includeText?: string;
   includeTrending?: string;
 }
 
@@ -236,7 +234,6 @@ const getArticles = async (
   const count = parseInt(query.count || "20");
   const category = query.category;
   const includeHTML = query.includeHTML === "true";
-  const includeText = query.includeText === "true";
   const includeTrending = query.includeTrending === "true";
 
   // Ensure positive integers for pageNumber and count
@@ -245,7 +242,7 @@ const getArticles = async (
 
   const skipCount = (validatedPageNumber - 1) * validatedCount;
 
-  const result = await retrieveArticles(skipCount, validatedCount, category, includeHTML, includeText);
+  const result = await retrieveArticles(skipCount, validatedCount, category, includeHTML, includeTrending);
   // Destructure the result to get both sorted arrays
   const { sortedByDate, sortedByLikes } = result;
 
@@ -450,6 +447,7 @@ const deleteArticle = [
 
       // Delete the image associated with the article from the S3 bucket
       const url = article.imageUrl;
+      logger.info(`deleting image: ${url}`)
       if (url) {
         const key = extractImageName(url);
         if (key) {
