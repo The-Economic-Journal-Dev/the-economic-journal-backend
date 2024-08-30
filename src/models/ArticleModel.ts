@@ -1,6 +1,5 @@
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
 import { IComment } from "./CommentModel";
-import sanitize from "sanitize-html";
 
 // TypeScript interface to define the schema fields for Article
 interface IArticle extends Document {
@@ -12,7 +11,7 @@ interface IArticle extends Document {
   imageUrl?: string;
   summary?: string;
   articleBody: string;
-  category: "Finance" | "Economic" | "Business" | "Entrepreneurship";
+  category: "Finance" | "Economic" | "Business" | "Entrepreneur";
   views: number;
   likedBy: Types.Array<Types.ObjectId>;
   likesCount: number;
@@ -69,7 +68,7 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
   },
   category: {
     type: String,
-    enum: ["Finance", "Economic", "Business", "Entrepreneurship"], // Add your desired categories
+    enum: ["Finance", "Economic", "Business", "Entrepreneur"], // Add your desired categories
     required: true,
   },
   likedBy: {
