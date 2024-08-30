@@ -7,14 +7,7 @@ import {
 } from "../services/aws/s3-file-manager";
 import { StatusCodes } from "http-status-codes";
 import upload from "../config/multer-config";
-import ejs from "ejs";
 import sanitizeHtml from "sanitize-html";
-import path from "path";
-import {
-  uploadNewArticle,
-  updateArticle,
-  removeArticle,
-} from "./github/article-manager";
 import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
 
 // TODO: Tell frontend team to use mammothjs to convert docx file to html in the FRONTEND
@@ -125,7 +118,7 @@ const createNewArticle = [
       position,
     });
 
-    const data = {
+    /*const data = {
       article: {
         title: sanitizedTitle,
         authorUid,
@@ -136,15 +129,15 @@ const createNewArticle = [
         category: sanitizeCategory,
         datePublished: newArticle.datePublished,
       },
-    };
+    };*/
 
-    // Render the article HTML using EJS template
+    /*// Render the article HTML using EJS template
     const html = await ejs.renderFile(
       path.resolve(__dirname, "../templates/article.ejs"),
       data,
-    );
+    );*/
 
-    await uploadNewArticle(newArticle.metaTitle, html);
+    /*await uploadNewArticle(newArticle.metaTitle, html);*/
 
     await newArticle.save();
 
@@ -395,17 +388,17 @@ const editArticle = [
         article.summary = sanitizedSummary;
         article.articleBody = sanitizedArticleBody;
 
-        const data = {
+        /*const data = {
           article,
-        };
+        };*/
 
         // Render the article HTML using EJS template
-        const html = await ejs.renderFile(
+        /*const html = await ejs.renderFile(
           path.resolve(__dirname, "../templates/article.ejs"),
           data,
-        );
-
-        await updateArticle(article.metaTitle, html);
+        );*/
+/*
+        await updateArticle(article.metaTitle, html);*/
 
         await article.save();
       } else {
@@ -461,7 +454,7 @@ const deleteArticle = [
       }
 
       await purgeCloudflareArticlesCache(article.metaTitle);
-      await removeArticle(article.metaTitle);
+/*      await removeArticle(article.metaTitle);*/
 
       return res.status(200).json({
         success: true,
