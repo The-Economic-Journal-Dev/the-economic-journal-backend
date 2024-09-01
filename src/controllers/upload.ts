@@ -42,7 +42,7 @@ const deleteImage = async (req: Request, res: Response) => {
     });
   }
 
-  const { key } = req.body;
+  const { key } = req.params;
 
   await deleteFileFromS3(key)
 
