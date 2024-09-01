@@ -1,8 +1,5 @@
 import Joi from "joi";
 
-// Regular expression to match valid UTF-8 characters
-const utf8Regex = /[\u0000-\u007F]|[\u0080-\u07FF]|[\u0800-\uFFFF]/;
-
 // Define the Joi schema
 const ArticleSchema = Joi.object({
   title: Joi.string().min(1).max(128).required().messages({
@@ -21,6 +18,9 @@ const ArticleSchema = Joi.object({
     "any.min": "Body must be at least 1 characters long",
     "any.max": "Body must be less than 2000 characters long",
   }),
+  imageUrl: Joi.string().min(1) // Ensure the string is at least 1 character long
+    .pattern(/\.(jpg|jpeg|png|bmp|webp|tiff|svg)$/i) // Validate that the string ends with common image file extensions (case insensitive)
+    .required(),
 });
 
 export { ArticleSchema };

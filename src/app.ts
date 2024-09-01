@@ -15,6 +15,7 @@ import { authenticateFirebaseId } from "./auth/authenticate-firebase-cred";
 import apiRoutes from "./routes/api-routes"; // Import the main routes serving the HTML
 import helmet from "helmet";
 import userRouter from "./routes/user-routes";
+import uploadRoutes from "./routes/upload-routes";
 
 // Use Helmet!
 app.use(helmet());
@@ -55,6 +56,7 @@ app.get(
 
 app.use("/articles", apiRoutes);
 app.use("/users", userRouter);
+app.use("/upload", uploadRoutes);
 
 app.use(errorHandler);
 

@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import {
   authenticateFirebaseId,
   verifyRole,
@@ -13,6 +13,7 @@ import {
   unlikeArticle,
   searchArticles,
 } from "../controllers/articles";
+import upload from "../config/multer-config"
 
 const router = express.Router();
 const likeRouter = express.Router({ mergeParams: true });
@@ -28,13 +29,13 @@ router.route("/search").get(searchArticles);
 
 router
   .route("/")
-  .post(verifyRole(["writer", "admin"]), createNewArticle)
+  .post(upload.none(), verifyRole(["writer", "admin"]), createNewArticle)
   .get(getArticles);
 
 router
   .route("/:id")
   .get(getSingleArticle)
-  .patch(verifyRole(["writer", "admin"]), editArticle)
+  .patch(upload.none(), verifyRole(["writer", "admin"]), editArticle)
   .delete(verifyRole(["writer", "admin"]), deleteArticle);
 
 export default router;

@@ -1,64 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import { ArticleModel } from "../models/ArticleModel";
 import { validateArticle } from "../utils/article-validator";
-import {
-  uploadFileToS3,
-  deleteFileFromS3,
-} from "../services/aws/s3-file-manager";
+import { deleteFileFromS3 } from "../services/aws/s3-file-manager";
 import { StatusCodes } from "http-status-codes";
-import upload from "../config/multer-config";
 import sanitizeHtml from "sanitize-html";
-import purgeCloudflareCacheByPrefix from "../utils/purge-cloudflare-cache";
 
-// TODO: Tell frontend team to use mammothjs to convert docx file to html in the FRONTEND
-// TODO: Factory out the middleware to follow the DRY principle
-
-// Define the types for files
-interface MulterFiles {
-  [fieldname: string]: Express.Multer.File[];
-}
-
-/**
- * Checks if the mimetype is one of the accepted image types (gif, jpg, jpeg, png).
- * @param {string} mimetype - The mimetype to check.
- * @returns {boolean} True if the mimetype is an accepted image type, false otherwise.
- */
-function isAcceptedMimetype(mimetype: string): boolean {
-  const acceptedImagePattern = /^image\/(gif|jpg|jpeg|png)$/;
-  return acceptedImagePattern.test(mimetype);
-}
-// async (req: Request, res: Response, next: NextFunction) => {
-//     if (process.env.NODE_ENV !== "production") {
-//       return next(); // Skip CORS setting in non-production environments
-//     } else {
-//       // Configure CORS for this specific route to be available from dash.derpdevstuffs.org
-//       res.removeHeader("Access-Control-Allow-Origin");
-//       const allowedDomain = "https://dash.derpdevstuffs.org";
-//       const origin = req.get("Origin");
-
-//       // If the request's Origin header matches the allowed domain, set the CORS header
-//       if (origin === allowedDomain) {
-//         res.append("Access-Control-Allow-Origin", allowedDomain);
-//       } else {
-//         res.append("Access-Control-Allow-Origin", ""); // Optionally, deny other origins in production
-//       }
-//       next();
-//     }
-//   },
-// VerifyRole has been defined as a middleware before this so req.user is populated
 const createNewArticle = [
-  upload.fields([
-    {
-      name: "image",
-      maxCount: 1,
-    },
-  ]),
   async (req: Request, res: Response) => {
-    const { title, metaTitle, category, summary, articleBody, position } =
+    const { title, metaTitle, category, summary, articleBody, position, imageUrl } =
       req.body;
-
-    const files = req.files as MulterFiles;
-    logger.info(files);
 
     const authorUid = req.user?.uid;
 
@@ -67,26 +17,13 @@ const createNewArticle = [
       metaTitle,
       summary,
       articleBody,
+      imageUrl
     });
 
     if (!articleValidationResult.success) {
       return res
         .status(articleValidationResult.status)
         .json({ success: false, message: articleValidationResult.message });
-    }
-
-    let imageUrl = "";
-    const images = files["image"];
-
-    if (images) {
-      const image = images[0];
-      if (!isAcceptedMimetype(image.mimetype)) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: `Invalid mimetype for file ${image.filename}.`,
-        });
-      }
-      imageUrl = await uploadFileToS3(image);
     }
 
     // Sanitize the title and other fields to prevent XSS attacks
@@ -108,7 +45,7 @@ const createNewArticle = [
     });
 
     const newArticle = new ArticleModel({
-      authorUid: authorUid ? authorUid : "000000001",
+      authorUid: authorUid,
       title: sanitizedTitle,
       metaTitle: sanitizedMetaTitle,
       category: sanitizeCategory,
@@ -117,27 +54,6 @@ const createNewArticle = [
       articleBody: sanitizedArticleBody,
       position,
     });
-
-    /*const data = {
-      article: {
-        title: sanitizedTitle,
-        authorUid,
-        metaTitle: sanitizedMetaTitle,
-        imageUrl,
-        summary: sanitizedSummary,
-        articleBody: sanitizedArticleBody,
-        category: sanitizeCategory,
-        datePublished: newArticle.datePublished,
-      },
-    };*/
-
-    /*// Render the article HTML using EJS template
-    const html = await ejs.renderFile(
-      path.resolve(__dirname, "../templates/article.ejs"),
-      data,
-    );*/
-
-    /*await uploadNewArticle(newArticle.metaTitle, html);*/
 
     await newArticle.save();
 
@@ -216,8 +132,6 @@ const retrieveArticles = async (skipCount: number, validatedCount: number, categ
   return result[0];
 };
 
-
-// TODO: add comments support
 const getArticles = async (
   req: Request<{}, {}, {}, GetArticleQuery>,
   res: Response,
@@ -298,17 +212,9 @@ function extractImageName(url?: string): string | undefined {
 }
 
 const editArticle = [
-  upload.fields([
-    {
-      name: "image",
-      maxCount: 1,
-    },
-  ]),
   async (req: Request, res: Response) => {
-    const { title, metaTitle, summary, articleBody } = req.body;
+    const { title, metaTitle, summary, articleBody, imageUrl } = req.body;
     const { id: articleId } = req.params;
-
-    const files = req.files as MulterFiles;
 
     const editorId = req.user?.uid; // req.user? because the fucking type declaration won't work
 
@@ -324,33 +230,6 @@ const editArticle = [
 
       // Check if the article exists
       if (article) {
-        await purgeCloudflareArticlesCache(article.metaTitle);
-
-        let imageUrl = "";
-        if ((req.files as MulterFiles)["image"]) {
-          const image = files["image"][0];
-          if (image) {
-            if (!isAcceptedMimetype(image.mimetype)) {
-              res.status(StatusCodes.BAD_REQUEST).json({
-                success: false,
-                message: `Invalid mimetype for file ${image.filename}.`,
-              });
-            }
-
-            const url = article?.imageUrl;
-            const imageName = extractImageName(url);
-            if (!imageName) {
-              logger.warn(
-                `Couldn't extract image name for article ${metaTitle}, perhaps there's no image?`,
-              );
-            } else {
-              await purgeCloudflareImagesCache(imageName);
-            }
-
-            // Replace the old image with the new one in the S3 bucket
-            imageUrl = await uploadFileToS3(image, imageName);
-          }
-        }
         const articleValidationResult = validateArticle({
           title,
           metaTitle,
@@ -365,9 +244,7 @@ const editArticle = [
             .json({ success: false, message: articleValidationResult.message });
         }
 
-        if (imageUrl !== "") {
-          article.imageUrl = imageUrl;
-        }
+        article.imageUrl = imageUrl;
 
         // Sanitize the title and other fields to prevent XSS attacks
         const sanitizedTitle = sanitizeHtml(title, {
@@ -388,18 +265,6 @@ const editArticle = [
         article.summary = sanitizedSummary;
         article.articleBody = sanitizedArticleBody;
 
-        /*const data = {
-          article,
-        };*/
-
-        // Render the article HTML using EJS template
-        /*const html = await ejs.renderFile(
-          path.resolve(__dirname, "../templates/article.ejs"),
-          data,
-        );*/
-/*
-        await updateArticle(article.metaTitle, html);*/
-
         await article.save();
       } else {
         return res.status(StatusCodes.NOT_FOUND).json({
@@ -407,8 +272,6 @@ const editArticle = [
           message: `No article with meta title: ${articleId} found.`,
         });
       }
-
-      res.setHeader("Last-Modified", article.lastUpdated.toString());
 
       res.status(201).json({
         success: true,
@@ -424,6 +287,7 @@ const editArticle = [
   },
 ];
 
+// TODO: Make this use sessions in case that the delete fails the article doesn't delete
 const deleteArticle = [
   async (req: Request, res: Response) => {
     try {
@@ -446,15 +310,9 @@ const deleteArticle = [
         if (key) {
           await deleteFileFromS3(key);
         } else {
-          throwError(
-            "Invalid CloudFront URL or image key",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-          );
+          logger.info("Invalid CloudFront URL or image key")
         }
       }
-
-      await purgeCloudflareArticlesCache(article.metaTitle);
-/*      await removeArticle(article.metaTitle);*/
 
       return res.status(200).json({
         success: true,
@@ -462,7 +320,8 @@ const deleteArticle = [
         article: null,
       });
     } catch (error) {
-      throwError(error as Error);
+      logger.error((error as Error).message)
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success: false, message: "Error deleting article" });
     }
   },
 ];
@@ -554,27 +413,6 @@ const unlikeArticle = async (req: Request, res: Response) => {
     message: "Article unliked successfully",
     likes: article.likesCount,
   });
-};
-
-/**
- * Wrapper for purgeCloudflareCacheByPrefix function solely for use with articles
- * @param articleKey the name of the article to purge
- */
-const purgeCloudflareArticlesCache = async (articleKey: String) => {
-  await purgeCloudflareCacheByPrefix(
-    `/articles${articleKey ? `/${articleKey}` : ""}`,
-  );
-};
-
-/**
- * Wrapper for purgeCloudflareCacheByPrefix function solely for use with articles
- * @param imageKey the name of the image to purge
- */
-const purgeCloudflareImagesCache = async (imageKey: String) => {
-  await purgeCloudflareCacheByPrefix(
-    `/${imageKey}`,
-    `images.${process.env.DOMAIN}`,
-  );
 };
 
 function isValidISOString(dateString: string) {
