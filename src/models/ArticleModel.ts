@@ -8,7 +8,7 @@ interface IArticle extends Document {
   metaTitle: string;
   datePublished: Date;
   lastUpdated: Date;
-  imageUrl?: string;
+  imageUrl: string;
   summary?: string;
   articleBody: string;
   category: "Finance" | "Economic" | "Business" | "Entrepreneur";
@@ -51,6 +51,7 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
     max: 10,
   },
   imageUrl: {
+    required: true,
     type: String,
   },
   summary: {
