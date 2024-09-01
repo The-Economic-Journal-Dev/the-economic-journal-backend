@@ -32,7 +32,9 @@ const createNewArticle = [
       allowedAttributes: {},
     });
     const sanitizedSummary = sanitizeHtml(summary);
-    const sanitizedArticleBody = sanitizeHtml(articleBody);
+    const sanitizedArticleBody = sanitizeHtml(articleBody, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ])
+    });
     const sanitizedMetaTitle = sanitizeHtml(metaTitle, {
       allowedTags: [],
       allowedAttributes: {},
@@ -252,7 +254,9 @@ const editArticle = [
           allowedAttributes: {},
         });
         const sanitizedSummary = sanitizeHtml(summary);
-        const sanitizedArticleBody = sanitizeHtml(articleBody);
+        const sanitizedArticleBody = sanitizeHtml(articleBody, {
+          allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ])
+        });
         const sanitizedMetaTitle = sanitizeHtml(metaTitle, {
           allowedTags: [],
           allowedAttributes: {},
