@@ -255,7 +255,27 @@ const editArticle = [
         });
         const sanitizedSummary = sanitizeHtml(summary);
         const sanitizedArticleBody = sanitizeHtml(articleBody, {
-          allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ])
+          allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ]),
+          allowedAttributes: {
+            '*': ['style'], // Allow style attribute on all tags
+          },
+          allowedStyles: {
+            '*': {
+              // Allow only specific CSS properties and their valid formats
+              'color': [/^#(0x)?[0-9a-f]{3,6}$/i, /^rgb\(/],  // Hex and RGB color formats
+              'float': [/^left$|^right$|^none$/],  // Allow float with specific values
+              'width': [/^\d+(?:px|%)$/],  // Allow width in px or percent
+              'height': [/^\d+(?:px|%)$/],  // Allow height in px or percent
+              'margin': [/^\d+(?:px|%)$/],  // Allow margin with px or percent units
+              'margin-top': [/^\d+(?:px|%)$/],  // Allow specific margin sides
+              'margin-right': [/^\d+(?:px|%)$/],
+              'margin-bottom': [/^\d+(?:px|%)$/],
+              'margin-left': [/^\d+(?:px|%)$/],
+              'display': [/^block$|^inline$|^inline-block$|^flex$|^grid$/],  // Allow display with specific values
+              // Disallow potentially dangerous properties
+              '!important': [],  // Disallow !important
+            }
+          }
         });
         const sanitizedMetaTitle = sanitizeHtml(metaTitle, {
           allowedTags: [],
