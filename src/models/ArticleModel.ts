@@ -81,6 +81,11 @@ const ArticleSchema: Schema<IArticle> = new Schema<IArticle>({
     type: Number,
     default: 0,
   },
+  authorName: {
+    type: String,
+    minlength: 1,
+    maxlength: 64,
+  }
 });
 
 ArticleSchema.index({ category: 1, datePublished: -1, articleText: 1 });
