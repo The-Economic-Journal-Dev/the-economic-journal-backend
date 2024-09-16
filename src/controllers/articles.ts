@@ -7,7 +7,7 @@ import sanitizeHtml from "sanitize-html";
 
 const createNewArticle = [
   async (req: Request, res: Response) => {
-    const { title, metaTitle, category, summary, articleBody, position, imageUrl } =
+    const { title, metaTitle, category, summary, articleBody, position, imageUrl, authorName } =
       req.body;
 
     const authorUid = req.user?.uid;
@@ -17,7 +17,8 @@ const createNewArticle = [
       metaTitle,
       summary,
       articleBody,
-      imageUrl
+      imageUrl,
+      authorName
     });
 
     if (!articleValidationResult.success) {
@@ -55,6 +56,7 @@ const createNewArticle = [
       summary: sanitizedSummary,
       articleBody: sanitizedArticleBody,
       position,
+      authorName
     });
 
     await newArticle.save();
@@ -218,7 +220,7 @@ const editArticle = [
     const { title, metaTitle, summary, articleBody, imageUrl } = req.body;
     const { id: articleId } = req.params;
 
-    const editorId = req.user?.uid; // req.user? because the fucking type declaration won't work
+    const editorId = req.user?.uid;
 
     if (!editorId) {
       res

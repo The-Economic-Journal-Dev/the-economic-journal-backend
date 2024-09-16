@@ -21,6 +21,11 @@ const ArticleSchema = Joi.object({
   imageUrl: Joi.string().min(1) // Ensure the string is at least 1 character long
     .pattern(/\.(jpg|jpeg|png|bmp|webp|tiff|svg)$/i) // Validate that the string ends with common image file extensions (case insensitive)
     .required(),
+  authorName: Joi.string().min(1).max(64).messages({
+    "any.empty": "Body is required",
+    "any.min": "Body must be at least 1 characters long",
+    "any.max": "Body must be less than 64 characters long",
+  })
 });
 
 export { ArticleSchema };
